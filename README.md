@@ -15,13 +15,23 @@ Built on [skene](https://github.com/ssccsorg/skene), which is a submodule pinned
 ```bash
 git clone --recurse-submodules https://github.com/ktema-systems/theoros.git
 cd theoros
-npm install
+./run.sh
+```
+
+`./run.sh` takes the frame submodule when it is not there, installs the packages when the lock has moved, generates the
+projects, clears the dev cache, stops whatever holds the port and serves the app at http://localhost:5274/. An existing
+clone needs no setup; a run brings it up to date.
+
+The modes are `--check` (typecheck, tests and a build), `--build`, `--preview` (a build served at 5277), `--capture`
+(read the systems and their units from ESI before the mode runs), `--stop`, `--port N` and `--host`.
+
+The npm scripts remain the manual route:
+
+```bash
 npm run dev        # http://localhost:5274/
 npm test
 npm run build
 ```
-
-An existing clone takes `git submodule update --init`.
 
 `npm run capture` reads the systems and their units from ESI and rewrites `capture/units.json`. It is a manual read and
 not a build step: the capture is pinned data, and `npm run generate` is what runs on every dev, test and build.
