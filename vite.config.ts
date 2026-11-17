@@ -33,8 +33,15 @@ function buildVersion(): string {
 const version = buildVersion();
 
 // The project a bare address opens on. The board names it rather than an entry, so no source file carries a project's own
-// name and a board assembled without that project fails here instead of at the first paint.
-const opens = (JSON.parse(readFileSync(here('./projects/board.json'), 'utf8')) as { opens?: string }).opens ?? '';
+// name. A config loaded without a generated board, which is a preview of an existing build, opens on nothing; the build's
+// own copy is where a missing board fails.
+const opens = (() => {
+  try {
+    return (JSON.parse(readFileSync(here('./projects/board.json'), 'utf8')) as { opens?: string }).opens ?? '';
+  } catch {
+    return '';
+  }
+})();
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), boardIntoBuild()],

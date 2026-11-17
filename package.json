@@ -6,10 +6,14 @@
   "description": "A board of the EVE Online space read from ESI: one star system a project, drawn by skene.",
   "scripts": {
     "dev": "vite",
+    "predev": "npm run generate",
     "build": "tsc -b && vite build",
+    "prebuild": "npm run generate",
     "preview": "vite preview",
     "test": "vitest run",
+    "pretest": "npm run generate",
     "typecheck": "tsc -b",
+    "generate": "tsx tools/systems.ts && node tools/board.mjs",
     "board": "node tools/board.mjs",
     "systems": "tsx tools/systems.ts"
   },

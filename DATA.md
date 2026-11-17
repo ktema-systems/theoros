@@ -1,7 +1,8 @@
 # The data this board holds
 
 Three pinned reads from ESI, the mapping that turns a capture into a run, and the notices the data asks for. The app's
-own source is `src/`, the generator is `tools/systems.ts`, and the folders it writes are `projects/`.
+own source is `src/`, the generator is `tools/systems.ts`, and the folders it writes are `projects/`. Those folders and
+`projects.json` are generated and not committed.
 
 ## The capture
 
@@ -34,7 +35,7 @@ index and read from ESI on 2026-11-17 at server 3707965, and these are the reads
 The eleven pilots are Akkio's people and the three hulls they flew are its ships, so the roster is a read and not a crew
 written for the demonstration. Who was in charge is the demonstration's reading of the kills, and it is the pilot whose
 damage across both of them was the most. Every number is ESI's. To refresh a capture, read the endpoints again and rerun
-`npm run systems`; the pin and the run move together or the run fails to parse.
+`npm run generate`; the pin and the run move together or the run fails to parse.
 
 ## What the run asks
 
@@ -53,7 +54,7 @@ demonstration exists to argue against.
 ## Writing the projects
 
 ```bash
-npm run systems
+npm run generate
 ```
 
 One project a system. Each folder is `project.json` and `run.txt`: the place holds the system at the middle of its own

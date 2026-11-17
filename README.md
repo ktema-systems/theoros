@@ -23,9 +23,10 @@ npm run build
 
 An existing clone takes `git submodule update --init`.
 
-`npm run systems` rewrites the ninety projects and the board from `capture/`. `npm run board` reassembles `projects.json`
-from the folders. The data, the endpoints and their pins are in [DATA.md](DATA.md). A hull's contract is in
-[MESH.md](MESH.md).
+`npm run generate` writes the ninety project folders and the board from `capture/`; the dev, build and test scripts run
+it first, so a fresh clone needs nothing else. Neither `projects/` nor `projects.json` is committed, because both are
+generated from the pinned captures. The data, the endpoints and their pins are in [DATA.md](DATA.md). A hull's contract
+is in [MESH.md](MESH.md).
 
 ## The tree
 
@@ -33,7 +34,7 @@ from the folders. The data, the endpoints and their pins are in [DATA.md](DATA.m
 capture/     the pinned ESI reads: ninety systems, two killmails, the Jita market
 src/         the sphere this app draws beside the shell, its camera, its hulls and the mapping
 tools/       systems.ts writes a project a system from the capture; board.mjs assembles projects.json
-projects/    ninety folders, one a system: project.json and the run beside it
+projects/    generated: ninety folders, one a system, from capture/
 skene/       the frame, pinned as a submodule
 ```
 
