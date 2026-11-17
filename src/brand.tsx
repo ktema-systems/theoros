@@ -36,8 +36,8 @@ function Mark({ className }: { className?: string }) {
  * board is a real read.
  */
 export const brand: Brand = {
-  title: 'NEW EDEN',
-  name: 'New Eden',
+  title: 'THEOROS',
+  name: 'Theoros',
   // Stamped by the build from the commit it was made from, so a reader can tell one build from another.
   version: `v${import.meta.env.VITE_VERSION}`,
   layers: ['Ktema', 'Skene'],
@@ -49,11 +49,11 @@ export const brand: Brand = {
   unit: { one: 'system', many: 'systems' },
   note: '',
   about: [
-    'New Eden is a board of its own over Ktema: one record model, one place, and the run the engine executed.',
+    'Theoros is a board of its own over Ktema: one record model, one place, and the run the engine executed.',
     'The board is The Forge: ninety systems with the coordinates, gates, stations and security ESI answers for them, and a project is one of them.',
     'The fleet is a real one: eleven pilots of New Eden Light Point College, in Fraternity., and the two hulls of GABELLA CORP they killed in Akkio, read from two ESI killmails.',
     'The market numbers are ESI too. The question, the finding and who took the work are this board reading them.',
-    'Skene draws it. The space is New Eden in EVE Online. Ktema is not affiliated with or endorsed by CCP.',
+    'Skene draws it. The space is New Eden in EVE Online, read from ESI. Theoros is not affiliated with or endorsed by CCP.',
     'Background: ESO/S. Brunier, CC BY 4.0.',
   ],
   Mark,
