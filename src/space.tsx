@@ -5,11 +5,13 @@ import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Star } from 'lucide-
 import sky from '../assets/sky.jpg?url';
 import {
   LEVEL,
+  cellOfPlace,
   dragTurn,
   fitView,
   forwardOf,
   onDisc,
-  placed,
+  onShell,
+  outlineOfCell,
   project,
   sectorOf,
   viewRegion,
@@ -297,6 +299,8 @@ interface RegionMark {
   label: string;
   /** Where the system stands on the shell, in radians. */
   bearing: [number, number];
+  /** The cell the system holds, in radians, or nothing when the place declares none. */
+  cell: [number, number][] | null;
 }
 
 function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | null }) {
@@ -386,26 +390,53 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
 
         {marks.map((mark) => {
           const [azimuth, elevation] = mark.bearing;
-          if (!visible([azimuth, elevation], bearing)) return null;
+          // A cell is the ground the system holds: the disc draws the part of it in front of the pilot, and the
+          // clickable ground is the way to the system. A place without a cell is a mark and nothing more.
+          const ground = mark.cell ? outlineOfCell(mark.cell, bearing) : null;
+          const near = visible([azimuth, elevation], bearing);
+          if (!ground && !near) return null;
           const [x, y] = onDisc(azimuth, elevation, bearing);
           const here = mark.id === current;
           return (
             <g key={mark.id}>
-              {here ? (
-                <circle cx={x} cy={y} r={0.07} className="fill-none stroke-foreground/40" strokeWidth={0.01} />
+              {ground ? (
+                <path
+                  d={ground}
+                  className={cn(
+                    'cursor-pointer',
+                    here ? 'fill-foreground/10 stroke-foreground/40' : 'fill-foreground/[0.03] stroke-border hover:fill-foreground/10',
+                  )}
+                  strokeWidth={0.005}
+                  onClick={() => {
+                    if (turned.current) return;
+                    face(mark.bearing);
+                  }}
+                >
+                  <title>{mark.label}</title>
+                </path>
               ) : null}
-              <circle
-                cx={x}
-                cy={y}
-                r={here ? 0.05 : 0.028}
-                className={cn('cursor-pointer', here ? 'fill-foreground' : 'fill-muted-foreground/60 hover:fill-foreground')}
-                onClick={() => {
-                  if (turned.current) return;
-                  face(mark.bearing);
-                }}
-              >
-                <title>{mark.label}</title>
-              </circle>
+              {near ? (
+                <>
+                  {here ? (
+                    <circle cx={x} cy={y} r={0.07} className="fill-none stroke-foreground/40" strokeWidth={0.01} />
+                  ) : null}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={here ? 0.05 : 0.028}
+                    className={cn(
+                      'cursor-pointer',
+                      here ? 'fill-foreground' : 'fill-muted-foreground/60 hover:fill-foreground',
+                    )}
+                    onClick={() => {
+                      if (turned.current) return;
+                      face(mark.bearing);
+                    }}
+                  >
+                    <title>{mark.label}</title>
+                  </circle>
+                </>
+              ) : null}
             </g>
           );
         })}
@@ -622,18 +653,18 @@ function EveSpace({ world, pickedId, onPick }: Board) {
     // A system is the place itself, so seating on it would put the camera inside the star. The pane stays where it is.
     if (!seatId || !world || seatId === projectId) return null;
     const found = world.present.find((unit) => unit.id === seatId);
-    return found ? placed(found.at, aspect, sector) : null;
+    return found ? onShell(found.path[found.path.length - 1] ?? found.at, world) : null;
   }, [seatId, world, aspect, sector, projectId]);
   const shift = (point: [number, number, number]): [number, number, number] =>
     seat ? [point[0] - seat[0], point[1] - seat[1], point[2] - seat[2]] : point;
   const ground = useMemo(() => {
     if (!world) return [];
-    const units = world.standing.filter((unit) => unit.icon !== 'person').map((unit) => placed(unit.at, aspect, sector));
+    const units = world.standing.filter((unit) => unit.icon !== 'person').map((unit) => onShell(unit.path[unit.path.length - 1] ?? unit.at, world));
     // A system is drawn as a body, so the fit is given the star's own width: a lone system fills the pane rather than
     // standing at a point, and a place that holds a fleet still fits the fleet.
     const own = world.standing.find((unit) => unit.id === projectId);
     if (!own) return units.map(shift);
-    const [x, y, z] = placed(own.at, aspect, sector);
+    const [x, y, z] = onShell(own.at, world);
     const extent: [number, number, number][] = [
       [x + BODY, y, z],
       [x - BODY, y, z],
@@ -659,7 +690,7 @@ function EveSpace({ world, pickedId, onPick }: Board) {
                 icon: unit.icon,
                 model: unit.model ?? null,
                 heading,
-                at: shift(placed(unit.at, aspect, sector)),
+                at: shift(onShell(unit.path[unit.path.length - 1] ?? unit.at, world)),
               };
             })
         : [],
@@ -724,6 +755,7 @@ function EveSpace({ world, pickedId, onPick }: Board) {
       id: entry.id,
       label: entry.title ?? entry.id,
       bearing: sectorOf(entry.place),
+      cell: cellOfPlace(entry.place),
     }));
   }, [projects]);
   const routes = useMemo(
@@ -731,7 +763,7 @@ function EveSpace({ world, pickedId, onPick }: Board) {
       world
         ? world.present
             .filter((unit) => unit.path.length > 1)
-            .map((unit) => unit.path.map((point) => shift(placed(point, aspect, sector))))
+            .map((unit) => unit.path.map((point) => shift(onShell(point, world))))
         : [],
     [world, aspect, sector, seat],
   );

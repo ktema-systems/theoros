@@ -21,6 +21,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseScenario } from '@ssccsorg/skene-kernel';
 import { runOf, type Capture, type Scene, type Step } from '../src/mapping';
+import { tile } from './cells';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = join(HERE, '..');
@@ -108,9 +109,6 @@ const FLEET_PIN = { source: 'esi', endpoint: WEB, revision: 'server-3707965/2026
 const VIEW: [number, number, number, number] = [0, 0, 520, 176];
 /** The middle of the box, which is where a system's own star stands. */
 const MIDDLE: [number, number] = [260, 88];
-/** How much of the shell the region covers, in degrees: the board's own patch, read by the frame's minimap. */
-const ACROSS = 120;
-const UP = 80;
 /** How far a body may stand from the middle of the place, which leaves room for a name beside it. */
 const REACH: [number, number] = [205, 64];
 
@@ -121,16 +119,11 @@ const slug = (name: string) =>
     .replace(/^-|-$/g, '');
 
 const [, , width, height] = VIEW;
-const span = (values: number[]) => [Math.min(...values), Math.max(...values)];
-const [minX, maxX] = span(systems.map((system) => system.x));
-const [minZ, maxZ] = span(systems.map((system) => system.z));
 
-/** Where the system stands on the shell, in degrees: the region laid on a patch the minimap can read. */
-function sectorOf(system: System): [number, number] {
-  const across = (system.x - minX) / (maxX - minX);
-  const north = (system.z - minZ) / (maxZ - minZ);
-  return [Number(((across - 0.5) * ACROSS).toFixed(3)), Number(((north - 0.5) * UP).toFixed(3))];
-}
+// The region's ground: one cell a system, and the cell's middle is where the system stands. The cells are nominal and not
+// the systems' real coordinates: EVE's positions are a flat map of a galaxy, and the shell this board draws is a sphere of
+// directions. What the cell is for is that the ninety places tile the shell without a gap and without an overlap.
+const tiling = tile(systems.map((system) => system.name));
 
 const nameOf = (id: number) => fleet.names[String(id)] ?? String(id);
 
@@ -241,6 +234,8 @@ const MARKET_STATION = 60003760;
 /** The place a system is: its star, its planets and their moons and belts, its gates and its stations. */
 function placeOf(system: System) {
   const id = slug(system.name);
+  const stand = tiling.get(system.name);
+  if (!stand) throw new Error(`${system.name} has no cell`);
   const units: Record<string, Unit> = { [id]: { icon: 'system', label: system.name, at: { record: MIDDLE } } };
   const one = held.systems[String(system.id)];
   if (!one) throw new Error(`${system.name} is not in capture/units.json`);
@@ -326,7 +321,9 @@ function placeOf(system: System) {
 
   return {
     view: VIEW,
-    sector: sectorOf(system),
+    sector: stand.seed,
+    cell: stand.cell,
+    mark: id,
     store: { label: system.name },
     areas: [{ x: 0, y: 0, w: width, h: height, label: system.name }],
     units,

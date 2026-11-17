@@ -46,7 +46,8 @@ is in [MESH.md](MESH.md).
 ```
 capture/     the pinned ESI reads: the region, every system's units, two killmails, the Jita market
 src/         the sphere this app draws beside the shell, its camera, its hulls and the mapping
-tools/       capture.ts reads the units; systems.ts writes a project a system; board.mjs assembles projects.json
+tools/       capture.ts reads the units; systems.ts writes a project a system; cells.ts divides the shell
+             into the systems' cells; board.mjs assembles projects.json
 projects/    generated: ninety folders, one a system, from capture/
 skene/       the frame, pinned as a submodule
 ```

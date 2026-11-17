@@ -67,8 +67,25 @@ One project a system. Each folder is `project.json` and `run.txt`: the place hol
 box, every planet, moon, belt, gate and station the capture holds, the fleet if the system is Akkio's, and the market
 station and its pilot if the system is Jita's. A unit's id is the spelling of its name, because the board draws the id and
 `40009077` is a row nobody can read. The positions are the source's: the radius is compressed so a moon and a gate stand
-on the same place, and the bearing is kept. The sector is the system's bearing
-on the shell, computed from its galactic coordinates, so the frame's minimap places every project at its own bearing.
+on the same place, and the bearing is kept.
+
+## The region's cells
+
+The ninety systems divide the shell between them. Each place declares the polygon it holds as `place.cell`, in degrees,
+and `place.sector` is the middle of that polygon. The polygons are the Voronoi cells of the ninety seeds on the sphere,
+relaxed until the cells are the same size, so the cells cover the shell once: no gap, no overlap, and no two places
+claiming one direction. Euler's formula forces twelve pentagons into any such tiling, so the ninety cells are twelve
+pentagons and seventy-eight hexagons. `tools/cells.ts` computes them and `npm run generate` writes them; a test holds the
+cells to the area of the sphere and to their shared edges.
+
+The cell is nominal and not the system's galactic position. ESI's coordinates describe a flat map of a galaxy, and the
+shell this board draws is a sphere of directions; a coordinate laid on it would put most of The Forge into one cap. What
+the cell is for is that a place is a ground of its own at the region's scale, and that the frame's minimap and its shell
+draw the same ground.
+
+Inside its cell a place keeps its own layout: the star at the middle and the bodies where the source puts them, scaled
+to the room the cell has. `place.mark` names the star as the one unit that stands for the system from the region, which
+is what the minimap draws where a project is not open.
 
 Every run is built by `src/mapping.ts` and read back with the kernel's parser before the folder is kept: a verb the reader
 does not model, or a count that does not derive, fails the generation. `tests/eve.test.ts` holds the committed folders to
