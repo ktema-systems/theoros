@@ -1,0 +1,14 @@
+# Uchoshi, The Forge.
+#
+# Read from ESI on 2026-11-15, while server 3698585 ran. Security, gates and stations are this system.
+
+# pin: source=esi endpoint=https://esi.evetech.net/latest revision=server-3698585/2026-11-15 adapter=eve/1
+
+seed 7
+
+# 00:00 Uchoshi is read.
+time 0
+measured security 0.474 rating uchoshi/system
+measured gates 2 gates uchoshi/system
+measured stations 9 stations uchoshi/system
+count 3

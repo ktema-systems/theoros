@@ -1,0 +1,14 @@
+# Obe, The Forge.
+#
+# Read from ESI on 2026-11-15, while server 3698585 ran. Security, gates and stations are this system.
+
+# pin: source=esi endpoint=https://esi.evetech.net/latest revision=server-3698585/2026-11-15 adapter=eve/1
+
+seed 7
+
+# 00:00 Obe is read.
+time 0
+measured security 0.347 rating obe/system
+measured gates 3 gates obe/system
+measured stations 4 stations obe/system
+count 3

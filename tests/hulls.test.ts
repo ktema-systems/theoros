@@ -6,7 +6,7 @@
 import { expect, test } from 'vitest';
 import * as THREE from 'three';
 
-import { markGeometry, type MarkKind } from '../projects/eve/src/hulls';
+import { markGeometry, type MarkKind } from '../src/hulls';
 
 const KINDS: MarkKind[] = ['hauler', 'station', 'gate'];
 

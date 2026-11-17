@@ -1,0 +1,14 @@
+# Sirseshin, The Forge.
+#
+# Read from ESI on 2026-11-15, while server 3698585 ran. Security, gates and stations are this system.
+
+# pin: source=esi endpoint=https://esi.evetech.net/latest revision=server-3698585/2026-11-15 adapter=eve/1
+
+seed 7
+
+# 00:00 Sirseshin is read.
+time 0
+measured security 0.748 rating sirseshin/system
+measured gates 2 gates sirseshin/system
+measured stations 2 stations sirseshin/system
+count 3

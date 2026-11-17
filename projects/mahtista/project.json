@@ -1,0 +1,116 @@
+{
+  "id": "mahtista",
+  "resources": [
+    {
+      "kind": "abilities",
+      "at": [
+        "console",
+        "order-read",
+        "order-fill",
+        "gate-open",
+        "traffic-read",
+        "dock-at",
+        "work-declare",
+        "corridor-hold",
+        "jump-run",
+        "record"
+      ]
+    },
+    {
+      "kind": "channel",
+      "at": "sim"
+    },
+    {
+      "kind": "kinds",
+      "at": {
+        "station": [
+          "reads",
+          "writes"
+        ],
+        "gate": [
+          "reads",
+          "writes"
+        ],
+        "hauler": [
+          "reads",
+          "writes",
+          "emits"
+        ],
+        "person": [
+          "person"
+        ],
+        "system": [
+          "reads",
+          "writes"
+        ]
+      }
+    },
+    {
+      "kind": "record",
+      "at": "projects/mahtista/run.txt"
+    },
+    {
+      "kind": "views",
+      "at": {
+        "seat": "shell",
+        "on": [
+          "eve-space",
+          "shell",
+          "records",
+          "graph",
+          "intents",
+          "act"
+        ]
+      }
+    },
+    {
+      "kind": "clock",
+      "at": {
+        "record": "00:00, Mahtista is read"
+      }
+    },
+    {
+      "kind": "status",
+      "at": "idle"
+    },
+    {
+      "kind": "place",
+      "at": {
+        "view": [
+          0,
+          0,
+          520,
+          176
+        ],
+        "sector": [
+          -23.064,
+          -5.581
+        ],
+        "store": {
+          "label": "Mahtista"
+        },
+        "areas": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 520,
+            "h": 176,
+            "label": "Mahtista"
+          }
+        ],
+        "units": {
+          "mahtista": {
+            "icon": "system",
+            "label": "Mahtista",
+            "at": {
+              "record": [
+                260,
+                88
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

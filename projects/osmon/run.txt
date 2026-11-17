@@ -1,0 +1,14 @@
+# Osmon, The Forge.
+#
+# Read from ESI on 2026-11-15, while server 3698585 ran. Security, gates and stations are this system.
+
+# pin: source=esi endpoint=https://esi.evetech.net/latest revision=server-3698585/2026-11-15 adapter=eve/1
+
+seed 7
+
+# 00:00 Osmon is read.
+time 0
+measured security 0.68 rating osmon/system
+measured gates 3 gates osmon/system
+measured stations 5 stations osmon/system
+count 3

@@ -1,0 +1,116 @@
+{
+  "id": "itamo",
+  "resources": [
+    {
+      "kind": "abilities",
+      "at": [
+        "console",
+        "order-read",
+        "order-fill",
+        "gate-open",
+        "traffic-read",
+        "dock-at",
+        "work-declare",
+        "corridor-hold",
+        "jump-run",
+        "record"
+      ]
+    },
+    {
+      "kind": "channel",
+      "at": "sim"
+    },
+    {
+      "kind": "kinds",
+      "at": {
+        "station": [
+          "reads",
+          "writes"
+        ],
+        "gate": [
+          "reads",
+          "writes"
+        ],
+        "hauler": [
+          "reads",
+          "writes",
+          "emits"
+        ],
+        "person": [
+          "person"
+        ],
+        "system": [
+          "reads",
+          "writes"
+        ]
+      }
+    },
+    {
+      "kind": "record",
+      "at": "projects/itamo/run.txt"
+    },
+    {
+      "kind": "views",
+      "at": {
+        "seat": "shell",
+        "on": [
+          "eve-space",
+          "shell",
+          "records",
+          "graph",
+          "intents",
+          "act"
+        ]
+      }
+    },
+    {
+      "kind": "clock",
+      "at": {
+        "record": "00:00, Itamo is read"
+      }
+    },
+    {
+      "kind": "status",
+      "at": "idle"
+    },
+    {
+      "kind": "place",
+      "at": {
+        "view": [
+          0,
+          0,
+          520,
+          176
+        ],
+        "sector": [
+          -15.814,
+          -1.007
+        ],
+        "store": {
+          "label": "Itamo"
+        },
+        "areas": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 520,
+            "h": 176,
+            "label": "Itamo"
+          }
+        ],
+        "units": {
+          "itamo": {
+            "icon": "system",
+            "label": "Itamo",
+            "at": {
+              "record": [
+                260,
+                88
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

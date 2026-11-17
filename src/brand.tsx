@@ -48,7 +48,7 @@ export const brand: Brand = {
   note: '',
   about: [
     'New Eden is a board of its own over Ktema: one record model, one place, and the run the engine executed.',
-    'The place is The Forge, ninety systems with the coordinates, gates, stations and security ESI answers for them.',
+    'The board is The Forge: ninety systems with the coordinates, gates, stations and security ESI answers for them, and a project is one of them.',
     'The fleet is a real one: eleven pilots of New Eden Light Point College, in Fraternity., and the two hulls of GABELLA CORP they killed in Akkio, read from two ESI killmails.',
     'The market numbers are ESI too. The question, the finding and who took the work are this board reading them.',
     'Skene draws it. The space is New Eden in EVE Online. Ktema is not affiliated with or endorsed by CCP.',

@@ -1,0 +1,267 @@
+{
+  "id": "akkio",
+  "resources": [
+    {
+      "kind": "abilities",
+      "at": [
+        "console",
+        "order-read",
+        "order-fill",
+        "gate-open",
+        "traffic-read",
+        "dock-at",
+        "work-declare",
+        "corridor-hold",
+        "jump-run",
+        "record"
+      ]
+    },
+    {
+      "kind": "channel",
+      "at": "sim"
+    },
+    {
+      "kind": "kinds",
+      "at": {
+        "station": [
+          "reads",
+          "writes"
+        ],
+        "gate": [
+          "reads",
+          "writes"
+        ],
+        "hauler": [
+          "reads",
+          "writes",
+          "emits"
+        ],
+        "person": [
+          "person"
+        ],
+        "system": [
+          "reads",
+          "writes"
+        ]
+      }
+    },
+    {
+      "kind": "record",
+      "at": "projects/akkio/run.txt"
+    },
+    {
+      "kind": "views",
+      "at": {
+        "seat": "shell",
+        "on": [
+          "eve-space",
+          "shell",
+          "records",
+          "graph",
+          "intents",
+          "act"
+        ]
+      }
+    },
+    {
+      "kind": "clock",
+      "at": {
+        "record": "00:00, Akkio is read"
+      }
+    },
+    {
+      "kind": "status",
+      "at": "running"
+    },
+    {
+      "kind": "place",
+      "at": {
+        "view": [
+          0,
+          0,
+          520,
+          176
+        ],
+        "sector": [
+          54.798,
+          -33.837
+        ],
+        "store": {
+          "label": "Akkio"
+        },
+        "areas": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 520,
+            "h": 176,
+            "label": "Akkio"
+          }
+        ],
+        "units": {
+          "4442228": {
+            "icon": "person",
+            "label": "4442228",
+            "role": "member",
+            "at": {
+              "record": [
+                292,
+                62
+              ]
+            }
+          },
+          "akkio": {
+            "icon": "system",
+            "label": "Akkio",
+            "at": {
+              "record": [
+                260,
+                88
+              ]
+            }
+          },
+          "saltyfish11": {
+            "icon": "person",
+            "label": "saltyfish11",
+            "role": "admin",
+            "at": {
+              "record": [
+                226,
+                62
+              ]
+            }
+          },
+          "scorpio-d": {
+            "icon": "person",
+            "label": "Scorpio D",
+            "role": "member",
+            "at": {
+              "record": [
+                248,
+                62
+              ]
+            }
+          },
+          "yinuo-lin-0": {
+            "icon": "person",
+            "label": "Yinuo LIN 0",
+            "role": "member",
+            "at": {
+              "record": [
+                270,
+                62
+              ]
+            }
+          },
+          "fourierjw": {
+            "icon": "person",
+            "label": "FourierJW",
+            "role": "member",
+            "at": {
+              "record": [
+                226,
+                82
+              ]
+            }
+          },
+          "rehe8": {
+            "icon": "person",
+            "label": "Rehe8",
+            "role": "member",
+            "at": {
+              "record": [
+                248,
+                82
+              ]
+            }
+          },
+          "r-io": {
+            "icon": "person",
+            "label": "R IO",
+            "role": "member",
+            "at": {
+              "record": [
+                270,
+                82
+              ]
+            }
+          },
+          "ygwsm1": {
+            "icon": "person",
+            "label": "ygwsm1",
+            "role": "member",
+            "at": {
+              "record": [
+                292,
+                82
+              ]
+            }
+          },
+          "rehe7": {
+            "icon": "person",
+            "label": "Rehe7",
+            "role": "member",
+            "at": {
+              "record": [
+                226,
+                102
+              ]
+            }
+          },
+          "0aurora03": {
+            "icon": "person",
+            "label": "0Aurora03",
+            "role": "member",
+            "at": {
+              "record": [
+                248,
+                102
+              ]
+            }
+          },
+          "raindrop233": {
+            "icon": "person",
+            "label": "raindrop233",
+            "role": "member",
+            "at": {
+              "record": [
+                270,
+                102
+              ]
+            }
+          },
+          "retribution": {
+            "icon": "hauler",
+            "label": "Retribution",
+            "at": {
+              "record": [
+                168,
+                68
+              ]
+            }
+          },
+          "stiletto": {
+            "icon": "hauler",
+            "label": "Stiletto",
+            "at": {
+              "record": [
+                168,
+                92
+              ]
+            }
+          },
+          "svipul": {
+            "icon": "hauler",
+            "label": "Svipul",
+            "at": {
+              "record": [
+                168,
+                116
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

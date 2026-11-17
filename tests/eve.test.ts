@@ -1,7 +1,8 @@
-// The Jita corridor's own sphere.
+// One project a system, and every run a system's own.
 //
-// The project names its seat, so the frame asks the project rather than the register. What this holds is that the
-// board's declaration resolves to the custom sphere and that every other project keeps the frame's own.
+// The board is The Forge as ESI answered it: ninety systems, each a project of its own, so the frame's minimap is the
+// travel between systems and the rail is the region's list. What this holds is the split: the folders the board names,
+// the run each one carries, the place it stands in, and the two projects whose story is not just their security.
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -13,26 +14,10 @@ import { declaredReadings, landingOf } from '@ssccsorg/skene-frame/lib/readings'
 import { seatOf, standing } from '@ssccsorg/skene-frame/lib/packs';
 import type { Views } from '@ssccsorg/skene-kernel';
 import { parseScenario, chainFor } from '@ssccsorg/skene-kernel';
-import { runOf, type Capture } from '../projects/eve/src/mapping';
-import '../projects/eve/src';
+import { runOf as mapped, type Capture } from '../src/mapping';
+import '../src/space';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
-const board = JSON.parse(readFileSync(`${ROOT}projects.json`, 'utf8')) as {
-  projects: { id: string; resources: { kind: string; at: unknown }[] }[];
-};
-
-const viewsOf = (id: string): Views | undefined =>
-  board.projects
-    .find((project) => project.id === id)
-    ?.resources.find((resource) => resource.kind === 'views')?.at as Views | undefined;
-
-/** The kills the corridor's fleet is read from, and the names ESI answers for every id they carry. */
-const FLEET = JSON.parse(readFileSync(`${ROOT}projects/eve/capture/fleet.json`, 'utf8')) as {
-  kills: {
-    attackers: { character_id?: number; ship_type_id: number; damage_done: number }[];
-  }[];
-  names: Record<string, string>;
-};
 
 /** The pilot a name is a unit under, in the place's own spelling. */
 const slug = (name: string) =>
@@ -40,6 +25,52 @@ const slug = (name: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+
+const board = JSON.parse(readFileSync(`${ROOT}projects.json`, 'utf8')) as {
+  projects: { id: string; resources: { kind: string; at: unknown }[] }[];
+};
+
+const specification = JSON.parse(readFileSync(`${ROOT}projects/board.json`, 'utf8')) as {
+  opens: string;
+  order: string[];
+};
+
+interface System {
+  id: number;
+  name: string;
+  sec: number;
+  gates: number;
+  stations: number;
+}
+
+interface Unit {
+  icon: string;
+  label?: string;
+  role?: string;
+  at: { record: [number, number] };
+}
+
+const systems = JSON.parse(readFileSync(`${ROOT}capture/systems.json`, 'utf8')) as System[];
+
+/** The kills the fleet is read from, and the names ESI answers for every id they carry. */
+const FLEET = JSON.parse(readFileSync(`${ROOT}capture/fleet.json`, 'utf8')) as {
+  kills: { attackers: { character_id?: number; ship_type_id: number; damage_done: number }[] }[];
+  names: Record<string, string>;
+};
+
+const viewsOf = (id: string): Views | undefined =>
+  board.projects
+    .find((project) => project.id === id)
+    ?.resources.find((resource) => resource.kind === 'views')?.at as Views | undefined;
+
+const placeOf = (id: string) =>
+  board.projects
+    .find((project) => project.id === id)
+    ?.resources.find((resource) => resource.kind === 'place')?.at as
+    | { sector: [number, number]; units: Record<string, Unit> }
+    | undefined;
+
+const runOf = (id: string) => readFileSync(`${ROOT}projects/${id}/run.txt`, 'utf8');
 
 /** The roster the kills carry: one entry a pilot, with the damage of every kill they answered in. */
 const roster = (() => {
@@ -63,39 +94,77 @@ const seatOfProject = (id: string) => {
 test('the region is a pane beside the shell, and the seat stays the frame own', () => {
   // The shell is still the seat and still the default sphere. The region is a pane of the same space: the frame sizes it
   // the way it sizes Kwai Tsing's map, and the project opens on the sphere with the region standing beside it.
-  const views = viewsOf('eve-online');
+  const views = viewsOf('jita');
   const readings = standing(declaredReadings(), { views });
-  expect(seatOfProject('eve-online')?.key, 'the seat is the shell').toBe('shell');
+  expect(seatOfProject('jita')?.key, 'the seat is the shell').toBe('shell');
   expect(readings.find((reading) => reading.pane)?.key, 'the region is the pane').toBe('eve-space');
   expect(readings.some((reading) => reading.key === 'shell'), 'and the sphere stands beside it').toBe(true);
   expect(landingOf(readings, views, null)?.key, 'the project opens on the sphere').toBe('shell');
 });
 
-test('the board is the one space this app draws', () => {
-  // One app and one project: the rail holds New Eden and nothing else, so the shell is the frame's and the project is the
-  // whole board.
-  expect(board.projects.map((project) => project.id)).toEqual(['eve-online']);
+test('the board is the region, one project a system', () => {
+  // The folders are the source: a system the capture holds is a project, and a project is a system the capture holds.
+  const wanted = systems.map((system) => slug(system.name)).sort();
+  expect(board.projects.map((project) => project.id).sort(), 'every system and nothing else').toEqual(wanted);
+  expect(specification.order.slice().sort(), 'the board names them all').toEqual(wanted);
+  expect(specification.opens, 'the market is what a bare address opens on').toBe('jita');
 });
 
-test('the deployment installs the sphere it names', () => {
-  expect(readFileSync(`${ROOT}src/main.tsx`, 'utf8'), 'the entry installs the project').toContain(
-    "'../projects/eve/src'",
-  );
+test('a project is its own system, named and stood where the capture puts it', () => {
+  for (const system of systems) {
+    const id = slug(system.name);
+    const unit = placeOf(id)?.units[id];
+    expect(unit?.icon, `${id} stands a system`).toBe('system');
+    expect(unit?.label, `${id} is named`).toBe(system.name);
+    expect(placeOf(id)?.sector, `${id} has a bearing`).toEqual(expect.any(Array));
+  }
+});
+
+test('the deployment installs the reading it names', () => {
+  expect(readFileSync(`${ROOT}src/main.tsx`, 'utf8'), 'the entry installs the reading').toContain("'./space'");
+});
+
+test('every run parses, counts what it wrote, and stands on units of its own place', () => {
+  // A run is the project's own reading, and a record whose origin is not a unit has nowhere to stand on the board.
+  for (const project of board.projects) {
+    const text = runOf(project.id);
+    const parsed = parseScenario(text);
+    expect(parsed.unknown, `${project.id} uses verbs the reader models`).toEqual([]);
+    for (const check of parsed.checks) {
+      expect(check.derived, `${project.id} counts ${check.expected} at ${check.at}s`).toBe(check.expected);
+    }
+    const units = placeOf(project.id)?.units ?? {};
+    for (const record of parsed.records) {
+      if (!record.origin) continue;
+      const unit = record.origin.split('/')[0] ?? record.origin;
+      expect(units[unit], `${project.id} reads ${record.origin}, and no unit stands there`).toBeDefined();
+    }
+  }
+});
+
+test('a system measures its own security, gates and stations', () => {
+  for (const system of systems) {
+    const id = slug(system.name);
+    // Jita's run is the market's, so its own numbers carry its name rather than the system's three labels.
+    const label = (name: string) => (id === 'jita' ? `jita-${name}` : name);
+    const parsed = parseScenario(runOf(id));
+    const measured = (name: string) =>
+      parsed.records.find((record) => record.label === label(name))?.measure;
+    expect(measured('security')?.value, `${system.name} security`).toBe(system.sec);
+    expect(measured('gates')?.value, `${system.name} gates`).toBe(system.gates);
+    expect(measured('stations')?.value, `${system.name} stations`).toBe(system.stations);
+  }
 });
 
 test('the run the board names is the one the capture maps to', () => {
-  const capture = JSON.parse(readFileSync(`${ROOT}projects/eve/capture/new-eden.json`, 'utf8')) as Capture;
-  const text = readFileSync(`${ROOT}projects/eve/scenario.txt`, 'utf8');
-  expect(text).toBe(runOf(capture));
-  const parsed = parseScenario(text);
-  expect(parsed.unknown).toEqual([]);
-  for (const check of parsed.checks) expect(check.derived, `at ${check.at}s`).toBe(check.expected);
+  const capture = JSON.parse(readFileSync(`${ROOT}capture/new-eden.json`, 'utf8')) as Capture;
+  expect(runOf('jita')).toBe(mapped(capture));
 });
 
 // A market fact reports what it observed, and a payload size is the wrong reading for it: the inspector's numeric row
 // says "bytes", which a traded volume is not. This is what keeps the two apart as far as the board.
 test('the market facts carry a measurement rather than a payload size', () => {
-  const { records } = parseScenario(readFileSync(`${ROOT}projects/eve/scenario.txt`, 'utf8'));
+  const { records } = parseScenario(runOf('jita'));
   const spike = records.find((record) => record.label === 'spike-volume');
   expect(spike?.measure, 'the day is a measurement').toEqual({ value: 23321824662, unit: 'units' });
   expect(spike?.bytes, 'and not a payload').toBeUndefined();
@@ -103,16 +172,11 @@ test('the market facts carry a measurement rather than a payload size', () => {
   expect(ask?.measure).toEqual({ value: 4.19, unit: 'isk' });
 });
 
-// The demo's claim is that a real measurement, a bound and a taker make one chain the screen can draw. A run that kept
-// the numbers and lost the chain would still pass every count above, so the chain is what this holds.
 test('the fleet is the one the kills carry, pilot by pilot', () => {
-  // A roster written for the demonstration would be a name nobody can check. The place's people are the pilots ESI answers
-  // for, and the one in charge is the reading the capture states.
-  const document = board.projects.find((entry) => entry.id === 'eve-online');
-  const place = document?.resources.find((resource) => resource.kind === 'place')?.at as
-    | { units: Record<string, { icon: string; label?: string; role?: string }> }
-    | undefined;
-  const people = Object.values(place?.units ?? {}).filter((unit) => unit.icon === 'person');
+  // A roster written for the demonstration would be a name nobody can check. Akkio's people are the pilots ESI answers
+  // for, and the one in charge is the pilot whose damage across both kills was the most.
+  const units = Object.values(placeOf('akkio')?.units ?? {});
+  const people = units.filter((unit) => unit.icon === 'person');
   expect(people.map((unit) => unit.label).sort(), 'the pilots the kills name').toEqual(
     roster.map((pilot) => pilot.name).sort(),
   );
@@ -121,19 +185,19 @@ test('the fleet is the one the kills carry, pilot by pilot', () => {
     'one in charge, and it is the pilot who did the most of it',
   ).toEqual([roster[0]?.name]);
   expect(
-    Object.values(place?.units ?? {})
+    units
       .filter((unit) => unit.icon === 'hauler')
       .map((unit) => unit.label)
       .sort(),
-    'and the hulls they flew are the place of their own',
+    'and the hulls they flew are a place of their own',
   ).toEqual(['Retribution', 'Stiletto', 'Svipul']);
 });
 
 test('the audit chain starts at the measurement and ends at the finding', () => {
-  const { records } = parseScenario(readFileSync(`${ROOT}projects/eve/scenario.txt`, 'utf8'));
+  const { records } = parseScenario(runOf('jita'));
   const [chain, ...rest] = chainFor(records);
   expect(rest, 'the run declares one piece of work').toEqual([]);
   expect(chain.from?.label, 'the work starts at the measured day').toBe('spike-volume');
-  expect(chain.worker, 'and a pilot of the fleet takes it').toBe(slug(roster[0]?.name ?? ''));
+  expect(chain.worker, 'and the pilot the capture names takes it').toBe('saltyfish11');
   expect(chain.produced?.content, 'and the finding is written down').toBe('size-not-breadth');
 });

@@ -1,0 +1,116 @@
+{
+  "id": "saisio",
+  "resources": [
+    {
+      "kind": "abilities",
+      "at": [
+        "console",
+        "order-read",
+        "order-fill",
+        "gate-open",
+        "traffic-read",
+        "dock-at",
+        "work-declare",
+        "corridor-hold",
+        "jump-run",
+        "record"
+      ]
+    },
+    {
+      "kind": "channel",
+      "at": "sim"
+    },
+    {
+      "kind": "kinds",
+      "at": {
+        "station": [
+          "reads",
+          "writes"
+        ],
+        "gate": [
+          "reads",
+          "writes"
+        ],
+        "hauler": [
+          "reads",
+          "writes",
+          "emits"
+        ],
+        "person": [
+          "person"
+        ],
+        "system": [
+          "reads",
+          "writes"
+        ]
+      }
+    },
+    {
+      "kind": "record",
+      "at": "projects/saisio/run.txt"
+    },
+    {
+      "kind": "views",
+      "at": {
+        "seat": "shell",
+        "on": [
+          "eve-space",
+          "shell",
+          "records",
+          "graph",
+          "intents",
+          "act"
+        ]
+      }
+    },
+    {
+      "kind": "clock",
+      "at": {
+        "record": "00:00, Saisio is read"
+      }
+    },
+    {
+      "kind": "status",
+      "at": "idle"
+    },
+    {
+      "kind": "place",
+      "at": {
+        "view": [
+          0,
+          0,
+          520,
+          176
+        ],
+        "sector": [
+          -4.598,
+          -16.009
+        ],
+        "store": {
+          "label": "Saisio"
+        },
+        "areas": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 520,
+            "h": 176,
+            "label": "Saisio"
+          }
+        ],
+        "units": {
+          "saisio": {
+            "icon": "system",
+            "label": "Saisio",
+            "at": {
+              "record": [
+                260,
+                88
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

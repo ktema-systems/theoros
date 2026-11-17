@@ -11,7 +11,7 @@
     "test": "vitest run",
     "typecheck": "tsc -b",
     "board": "node tools/board.mjs",
-    "place": "node projects/eve/tools/place.mjs"
+    "systems": "tsx tools/systems.ts"
   },
   "dependencies": {
     "@ssccsorg/skene-board": "file:../../../skene/packages/board",

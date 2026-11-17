@@ -1,9 +1,9 @@
 import { createRoot } from 'react-dom/client';
-// The kinds this board draws. The shell is the sphere a project's space is read through and the graph is how its
-// participants are read; the records, the intents and the act are the frame's own.
+// The kinds this board draws. The shell is the sphere a system is read through and the graph is how its participants are
+// read; the region beside it and the records, the intents and the act are this app's and the frame's.
 import '@ssccsorg/skene-view-shell';
 import '@ssccsorg/skene-view-graph';
-import '../projects/eve/src';
+import './space';
 import { Frame, offTheShelf } from '@ssccsorg/skene-frame';
 import { brand } from './brand';
 import './styles.css';

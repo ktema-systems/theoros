@@ -1,0 +1,248 @@
+{
+  "pin": {
+    "source": "esi",
+    "endpoint": "https://esi.evetech.net/latest",
+    "revision": "server-3698585/2026-11-15",
+    "adapter": "eve/1"
+  },
+  "title": "EVE Online: the Jita corridor",
+  "introduction": [
+    "Read from ESI on 2026-11-15, while server 3698585 ran with 34417 pilots online.",
+    "The fleet that reads it stood in Akkio (30000200): killmails 139984294 and 139984282, read from ESI on 2026-11-17 (server 3707965). Eleven pilots of New Eden Light Point College, in Fraternity., killed a Gila and a Tengu of GABELLA CORP in Retributions, Stilettos and a Svipul. Who was in charge is this demonstration's reading of them.",
+    "Jita (30000142) and Perimeter (30000144) are one jump apart through stargate 50001249, and each opens onto Maurasi and Niyabainen. Jita's seven gates run to Maurasi, Perimeter, New Caldari, Sobaseki, Muvolailen, Niyabainen and Ikuchi.",
+    "Tritanium (type 34) in The Forge (10000002), over the 90 days to 2026-11-14: mean volume 5859886043, 2083 orders a day, mean intraday range 2.35%, 2812520 a trade.",
+    "2026-10-06 traded 23321824662, 3.98 times that mean, in a 22.8% range, on 2960 orders. The average fell to 3.78 and then to 3.54.",
+    "The question and the finding are this demonstration's reading. The numbers are ESI's."
+  ],
+  "seed": 7,
+  "scenes": [
+    {
+      "at": 0,
+      "note": "00:00 Jita IV-4. Forty-five sell orders, and 4.24 is the best ask.",
+      "steps": [
+        {
+          "verb": "position",
+          "args": [
+            "jita-4-4",
+            "270,79"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "sell-orders",
+            "47",
+            "orders",
+            "jita-4-4/order"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "best-ask",
+            "4.19",
+            "isk",
+            "jita-4-4/order"
+          ]
+        }
+      ]
+    },
+    {
+      "at": 600,
+      "note": "00:10 The corridor. Seven gates out of Jita, five out of Perimeter, one jump between.",
+      "steps": [
+        {
+          "verb": "measured",
+          "args": [
+            "jita-security",
+            "0.946",
+            "rating",
+            "jita/system"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "jita-gates",
+            "7",
+            "gates",
+            "jita/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "jita-stations",
+            "18",
+            "stations",
+            "jita/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "perimeter-gates",
+            "5",
+            "gates",
+            "perimeter/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "perimeter-stations",
+            "5",
+            "stations",
+            "perimeter/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "corridor-jumps",
+            "1",
+            "jumps",
+            "perimeter/traffic"
+          ]
+        }
+      ]
+    },
+    {
+      "at": 1200,
+      "note": "00:20 What the neighbouring systems hold, from Sobaseki's 0.841 to Muvolailen's 0.708.",
+      "steps": [
+        {
+          "verb": "measured",
+          "args": [
+            "maurasi-security",
+            "0.913",
+            "rating",
+            "maurasi/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "niyabainen-security",
+            "0.949",
+            "rating",
+            "niyabainen/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "sobaseki-security",
+            "0.841",
+            "rating",
+            "sobaseki/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "muvolailen-security",
+            "0.708",
+            "rating",
+            "muvolailen/traffic"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "ikuchi-security",
+            "0.949",
+            "rating",
+            "ikuchi/traffic"
+          ]
+        }
+      ]
+    },
+    {
+      "at": 1800,
+      "note": "00:30 2026-10-06: 3.98 times the quarter's mean, in a 22.8% range.",
+      "steps": [
+        {
+          "verb": "hint",
+          "args": [
+            "desk-rule",
+            "no-day-over-17579658129"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "quarter-mean",
+            "5859886043",
+            "units",
+            "jita-4-4/market"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "spike-volume",
+            "23321824662",
+            "units",
+            "jita-4-4/market"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "peak-orders",
+            "2960",
+            "orders",
+            "jita-4-4/market"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "spike-range",
+            "22.8",
+            "pct",
+            "jita-4-4/market"
+          ]
+        }
+      ]
+    },
+    {
+      "at": 2700,
+      "note": "00:45 The finding: orders rose 42%, and the size of a trade nearly tripled.",
+      "steps": [
+        {
+          "verb": "intent",
+          "args": [
+            "explain-2026-10-06",
+            "spike-volume",
+            "explain-the-day"
+          ]
+        },
+        {
+          "verb": "claim",
+          "args": [
+            "explain-2026-10-06",
+            "saltyfish11"
+          ]
+        },
+        {
+          "verb": "conclude",
+          "args": [
+            "explain-2026-10-06",
+            "size-not-breadth"
+          ]
+        },
+        {
+          "verb": "measured",
+          "args": [
+            "after-average",
+            "3.54",
+            "isk",
+            "jita-4-4/market"
+          ]
+        }
+      ]
+    }
+  ]
+}
