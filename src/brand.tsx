@@ -45,6 +45,8 @@ export const brand: Brand = {
   // given its own.
   words: { fact: 'observation', intent: 'action', hint: 'constraint' },
   status: 'read-only',
+  // The frame's unit is a project; this board's unit is a star system, and it says so wherever a reader adds or names one.
+  unit: { one: 'system', many: 'systems' },
   note: '',
   about: [
     'New Eden is a board of its own over Ktema: one record model, one place, and the run the engine executed.',
