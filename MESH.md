@@ -82,6 +82,9 @@ Current mark sizes, in the same units:
 | hauler 3, twin | the spine with two tail booms, fins and a second row | 0.045 x 0.031 x 0.077 | 336 |
 | station | a core, a torus, four spokes, a mast, drums and a collar | 0.059 x 0.052 x 0.062 | 376 |
 | gate | three tori, four anchors, an arm and four struts | 0.046 x 0.053 x 0.046 | 508 |
+| planet | a sphere with one lit band | 0.069 x 0.064 x 0.069 | 588 |
+| moon | a sphere | 0.036 x 0.036 x 0.036 | 168 |
+| belt | a flat torus | 0.076 x 0.008 x 0.076 | 160 |
 | system | a shader-shaded sphere, a corona sprite and three planets | radius 0.22 at twice the shell | none |
 | starfield | `points` | 0.018, at radius 7 to 11 | none |
 
@@ -90,9 +93,10 @@ its face shaded by a two-line shader (bright at the middle, warmer at the limb),
 radius 0.03 to 0.06 on rings derived from the system's own id. A place's marks are read in front of it, so the star never
 stands where a station or a hull stands.
 
-Longest side against the contract: the hauler's 0.077 is inside the 0.08 a mark is allowed, and the
-station and the gate sit below it so no kind of entity is drawn larger than another on the strength of
-what it is.
+Longest side against the contract: the hauler's 0.077 and the belt's 0.076 are inside the 0.08 a mark is allowed, and
+the rest sit below them so no kind of entity is drawn larger than another on the strength of what it is. A planet, a
+moon and a belt are drawn by their kind and tinted by the type the place declares, so two planets of one system are not
+one planet twice.
 
 Materials are `meshBasicMaterial` only. There are no lights in the scene, so a hull brings its own
 shading in vertex colours and the material's colour multiplies it; that is also what lets a pick change

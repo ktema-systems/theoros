@@ -166,8 +166,8 @@ function Hauler({ colour, heading, variant }: { colour: string; heading: number;
   );
 }
 
-/** A station, and a gate: one geometry each, shared by every mark of that kind. */
-function Structure({ kind, colour }: { kind: 'station' | 'gate'; colour: string }) {
+/** A station, a gate, a planet, a moon and a belt: one geometry each, shared by every mark of that kind. */
+function Structure({ kind, colour }: { kind: 'station' | 'gate' | 'planet' | 'moon' | 'belt'; colour: string }) {
   return (
     <mesh geometry={markGeometry(kind)}>
       <meshBasicMaterial color={colour} vertexColors />
@@ -175,11 +175,25 @@ function Structure({ kind, colour }: { kind: 'station' | 'gate'; colour: string 
   );
 }
 
+/** The hues a planet is drawn in by its type, so two bodies of one system are not one body twice. */
+const PLANETS = ['#a9c9da', '#c8b79b', '#9fb7a6', '#b7a9c6', '#d2c7a9', '#a6bdd0'];
+/** The metals a station is drawn in by its type; the same hue family, so a station is still a station. */
+const STATIONS = ['#e0b050', '#cfc7b8', '#c2b49c', '#d8b876'];
+
+/** One of a small set of hues for a body, from the type the place declares. */
+function shade(palette: string[], model: string | null, id: string): string {
+  let hash = 0;
+  for (const letter of model ?? id) hash = (hash * 31 + letter.charCodeAt(0)) % 100003;
+  return palette[hash % palette.length];
+}
+
 /** One unit as this board draws it: where it stands, what it is, and where it is pointed. */
 interface Marked {
   id: string;
   label: string | null;
   icon: string | null;
+  /** What the place says the unit is drawn as: a planet's type, a station's type, or nothing. */
+  model: string | null;
   heading: number;
   at: [number, number, number];
 }
@@ -196,10 +210,16 @@ function Mark({ system, picked, onPick }: { system: Marked; picked: boolean; onP
     : system.icon === 'gate'
       ? '#9fc0ff'
       : system.icon === 'station'
-        ? '#e0b050'
-        : system.icon === 'hauler'
-          ? '#9fb6c9'
-          : '#8fb2e8';
+        ? shade(STATIONS, system.model, system.id)
+        : system.icon === 'planet'
+          ? shade(PLANETS, system.model, system.id)
+          : system.icon === 'moon'
+            ? '#b9c2cc'
+            : system.icon === 'belt'
+              ? '#b6a184'
+              : system.icon === 'hauler'
+                ? '#9fb6c9'
+                : '#8fb2e8';
   return (
     <group
       position={system.at}
@@ -217,6 +237,12 @@ function Mark({ system, picked, onPick }: { system: Marked; picked: boolean; onP
         <Structure kind="station" colour={colour} />
       ) : system.icon === 'gate' ? (
         <Structure kind="gate" colour={colour} />
+      ) : system.icon === 'planet' ? (
+        <Structure kind="planet" colour={colour} />
+      ) : system.icon === 'moon' ? (
+        <Structure kind="moon" colour={colour} />
+      ) : system.icon === 'belt' ? (
+        <Structure kind="belt" colour={colour} />
       ) : (
         <mesh>
           {/* A system is a point of light, so it is drawn as one: a small body with the glow of one rather than a facet. */}
@@ -631,6 +657,7 @@ function EveSpace({ world, pickedId, onPick }: Board) {
                 id: unit.id,
                 label: unit.label,
                 icon: unit.icon,
+                model: unit.model ?? null,
                 heading,
                 at: shift(placed(unit.at, aspect, sector)),
               };

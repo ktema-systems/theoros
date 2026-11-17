@@ -4,10 +4,14 @@
 // `projects/<slug>/project.json` and the run beside it. A run is built by the one mapping (`src/mapping`) and parsed
 // before the folder is kept, so a count is the mapping's and a verb this build does not model fails here.
 //
-//   npm run systems
+//   npm run generate
 //
-// Jita is the one system whose run is not its own security: `capture/new-eden.json` is the market question, and the units
-// it names stand in Jita's place. The fleet stands in Akkio, the system the kills were read in.
+// `capture/units.json` is what each system holds: the star, its planets and their moons and belts, the gates and the
+// stations. Every one of them is a unit, so a system shows what the source covers rather than a count, and the units are
+// laid where the source puts them.
+//
+// Jita is the one system whose run is not its own security: `capture/new-eden.json` is the market question, and the
+// station it reads is the station ESI numbers 60003760. The fleet stands in Akkio, the system the kills were read in.
 //
 // The last thing written is `projects/board.json`, so the rail is the systems the source holds rather than a list kept
 // by hand.
@@ -45,6 +49,7 @@ interface Fleet {
 interface Unit {
   icon: string;
   label: string;
+  model?: string;
   role?: string;
   abilities?: string[];
   at: { record: [number, number] };
@@ -57,21 +62,57 @@ interface Pilot {
   damage: number;
 }
 
+interface Held {
+  id: number;
+  name: string;
+  x: number;
+  z: number;
+}
+
+interface HeldPlanet extends Held {
+  type: number;
+  moons: Held[];
+  belts: Held[];
+}
+
+interface HeldGate extends Held {
+  to: number;
+}
+
+interface HeldStation extends Held {
+  type: number;
+}
+
+interface HeldSystem {
+  star: { id: number; name: string; radius: number; spectral: string };
+  planets: HeldPlanet[];
+  gates: HeldGate[];
+  stations: HeldStation[];
+}
+
+interface Capture2 {
+  pin: { source: string; endpoint: string; revision: string; adapter: string };
+  systems: Record<string, HeldSystem>;
+}
+
 const systems = JSON.parse(readFileSync(join(APP, 'capture', 'systems.json'), 'utf8')) as System[];
 const fleet = JSON.parse(readFileSync(join(APP, 'capture', 'fleet.json'), 'utf8')) as Fleet;
 const market = JSON.parse(readFileSync(join(APP, 'capture', 'new-eden.json'), 'utf8')) as Capture;
+const held = JSON.parse(readFileSync(join(APP, 'capture', 'units.json'), 'utf8')) as Capture2;
 
 const WEB = 'https://esi.evetech.net/latest';
 const SYSTEMS_PIN = { source: 'esi', endpoint: WEB, revision: 'server-3698585/2026-11-15', adapter: 'eve/1' };
 const FLEET_PIN = { source: 'esi', endpoint: WEB, revision: 'server-3707965/2026-11-17', adapter: 'eve/1' };
 
-/** The place every unit is laid in: one box for the region, so a body keeps its offset across a regeneration. */
+/** The place every unit is laid in. */
 const VIEW: [number, number, number, number] = [0, 0, 520, 176];
-/** The middle of the box, which is where a system's own star stands: the place is the system's space. */
+/** The middle of the box, which is where a system's own star stands. */
 const MIDDLE: [number, number] = [260, 88];
 /** How much of the shell the region covers, in degrees: the board's own patch, read by the frame's minimap. */
 const ACROSS = 120;
 const UP = 80;
+/** How far a body may stand from the middle of the place, which leaves room for a name beside it. */
+const REACH: [number, number] = [205, 64];
 
 const slug = (name: string) =>
   name
@@ -116,7 +157,7 @@ const roster = [...pilots.values()].sort((left, right) => right.damage - left.da
 const commander = roster[0];
 const hulls = [...new Set(roster.map((pilot) => pilot.hull))].sort();
 
-/** The units the market capture names, which are the ones its run carries a record about. */
+/** The systems the market capture reads. Its run names a gate by the system it leads to, not by the gate's own id. */
 const namedByMarket = new Set<string>();
 for (const scene of market.scenes) {
   for (const step of scene.steps) {
@@ -127,21 +168,15 @@ for (const scene of market.scenes) {
   }
 }
 
-/**
- * The units Jita's place adds beyond the systems its run names: the station the order stands at and the pilot who takes
- * the work.
- */
-const MARKET_CAST: { id: string; icon: string; label: string; role?: string; offset: [number, number] }[] = [
-  { id: 'jita-4-4', icon: 'station', label: 'Jita IV-4', offset: [10, -9] },
-  { id: 'saltyfish11', icon: 'person', label: 'saltyfish11', role: 'admin', offset: [26, 4] },
-];
-
 const KINDS = {
   station: ['reads', 'writes'],
   gate: ['reads', 'writes'],
   hauler: ['reads', 'writes', 'emits'],
   person: ['person'],
   system: ['reads', 'writes'],
+  planet: [],
+  moon: [],
+  belt: [],
 };
 
 /** The abilities the kinds read and write through, and the record every unit keeps. */
@@ -161,60 +196,132 @@ const ABILITIES = [
 /** The views a system stands: the sphere, the region drawn beside it, and the frame's own readings. */
 const VIEWS = { seat: 'shell', on: ['eve-space', 'shell', 'records', 'graph', 'intents', 'act'] };
 
-/** Clamp a unit to the box, so a fleet at a system near the edge is still drawn inside the patch. */
+/** Clamp a unit to the box, so a body near the edge is still drawn inside the patch. */
 const inside = ([x, y]: [number, number]): [number, number] => [
-  Math.min(Math.max(x, 10), width - 10),
-  Math.min(Math.max(y, 10), height - 10),
+  Math.min(Math.max(Math.round(x * 10) / 10, 10), width - 10),
+  Math.min(Math.max(Math.round(y * 10) / 10, 10), height - 10),
 ];
 
 const offsetOf = (home: [number, number], [dx, dy]: [number, number]) => inside([home[0] + dx, home[1] + dy]);
 
-/** The place a system is: its star, and whatever the board stands there. */
+/**
+ * How far from the middle a body is drawn.
+ *
+ * The source states a position in metres, and a system is a thousand times wider than its inner planets. Drawn at that
+ * scale a moon and a gate would be one point, so the radius is compressed and the bearing kept: the order and the
+ * directions are the source's, and the picture is one a mark can be read in.
+ */
+const R0 = 1e9;
+function radial(r: number, most: number): number {
+  if (most <= 0) return 0;
+  if (most <= R0) return r / most;
+  return Math.log1p(r / R0) / Math.log1p(most / R0);
+}
+
+/** Where one of the system's own bodies stands on the place, from its position in metres. */
+function projector(most: number) {
+  return ([x, z]: [number, number]): [number, number] => {
+    const reach = radial(Math.hypot(x, z), most);
+    const angle = Math.atan2(z, x);
+    return inside([MIDDLE[0] + Math.cos(angle) * reach * REACH[0], MIDDLE[1] - Math.sin(angle) * reach * REACH[1]]);
+  };
+}
+
+/** A moon or a belt stands round its planet, so its own distance is read at the scale of that planet's family. */
+function around(home: [number, number], body: Held, parent: Held, most: number, least: number): [number, number] {
+  const [dx, dz] = [body.x - parent.x, body.z - parent.z];
+  const angle = Math.atan2(dz, dx);
+  const size = least + (most > 0 ? (Math.hypot(dx, dz) / most) * 9 : 0);
+  return inside([home[0] + Math.cos(angle) * size, home[1] - Math.sin(angle) * size]);
+}
+
+/** The station the market capture reads, as ESI numbers it; the run's own name for it is `jita-4-4`. */
+const MARKET_STATION = 60003760;
+
+/** The place a system is: its star, its planets and their moons and belts, its gates and its stations. */
 function placeOf(system: System) {
   const id = slug(system.name);
-  const at = MIDDLE;
-  const units: Record<string, Unit> = { [id]: { icon: 'system', label: system.name, at: { record: at } } };
+  const units: Record<string, Unit> = { [id]: { icon: 'system', label: system.name, at: { record: MIDDLE } } };
+  const one = held.systems[String(system.id)];
+  if (!one) throw new Error(`${system.name} is not in capture/units.json`);
+
+  // A unit is named in the place by the word a reader already uses, so the id is the name's spelling and not an ESI
+  // number: the panel and the board draw the id, and an id of eight digits is a row nobody can read.
+  const taken = new Set<string>([id]);
+  const keyOf = (name: string): string => {
+    const base = slug(name) || 'unit';
+    let key = base;
+    for (let more = 2; taken.has(key); more += 1) key = `${base}-${more}`;
+    taken.add(key);
+    return key;
+  };
+
+  const bodies = [...one.planets, ...one.gates, ...one.stations];
+  const most = Math.max(...bodies.map((body) => Math.hypot(body.x, body.z)), 0);
+  const at = projector(most);
+  const systemName = (wanted: number) => systems.find((entry) => entry.id === wanted)?.name ?? String(wanted);
+  const home: Record<string, [number, number]> = {};
+
+  for (const planet of one.planets) {
+    const here = at([planet.x, planet.z]);
+    const key = keyOf(planet.name);
+    home[key] = here;
+    units[key] = { icon: 'planet', label: planet.name, model: String(planet.type), at: { record: here } };
+    const mostMoon = Math.max(...planet.moons.map((moon) => Math.hypot(moon.x - planet.x, moon.z - planet.z)), 0);
+    for (const moon of planet.moons) {
+      units[keyOf(moon.name)] = { icon: 'moon', label: moon.name, at: { record: around(here, moon, planet, mostMoon, 5) } };
+    }
+    const mostBelt = Math.max(...planet.belts.map((belt) => Math.hypot(belt.x - planet.x, belt.z - planet.z)), 0);
+    for (const belt of planet.belts) {
+      units[keyOf(belt.name)] = { icon: 'belt', label: belt.name, at: { record: around(here, belt, planet, mostBelt, 8) } };
+    }
+  }
+
+  for (const gate of one.gates) {
+    const to = systemName(gate.to);
+    // The market run reads a neighbour through the gate that leads to it, so that gate carries the neighbour's name.
+    const dest = slug(to);
+    const key = dest !== id && namedByMarket.has(dest) && !taken.has(dest) ? dest : keyOf(to);
+    taken.add(key);
+    units[key] = { icon: 'gate', label: `to ${to}`, at: { record: at([gate.x, gate.z]) } };
+  }
+
+  for (const station of one.stations) {
+    const key = station.id === MARKET_STATION ? 'jita-4-4' : keyOf(station.name);
+    taken.add(key);
+    home[key] = at([station.x, station.z]);
+    units[key] = {
+      icon: 'station',
+      label: station.name,
+      model: String(station.type),
+      ...(key === 'jita-4-4' ? { abilities: ['order-read', 'order-fill'] } : {}),
+      at: { record: home[key] },
+    };
+  }
 
   if (system.name === fleet.system.name) {
-    // The fleet stands in the system it fought in. The formation falls to the left of the star so a name beside it is not
-    // cut off by the patch.
+    // The fleet stands in the system it fought in, round its star.
     roster.forEach((pilot, index) => {
       units[pilot.id] = {
         icon: 'person',
         label: pilot.name,
         role: pilot === commander ? 'admin' : 'member',
-        at: { record: offsetOf(at, [-34 + (index % 4) * 22, -26 + Math.floor(index / 4) * 20]) },
+        at: { record: offsetOf(MIDDLE, [-34 + (index % 4) * 22, -26 + Math.floor(index / 4) * 20]) },
       };
     });
     hulls.forEach((hull, index) => {
-      units[slug(hull)] = { icon: 'hauler', label: hull, at: { record: offsetOf(at, [-92, -20 + index * 24]) } };
+      units[slug(hull)] = { icon: 'hauler', label: hull, at: { record: offsetOf(MIDDLE, [-92, -20 + index * 24]) } };
     });
   }
 
   if (id === 'jita') {
-    // The systems the market run reads are Jita's neighbours, drawn as a ring around the star: the place is Jita's own
-    // space, and a system beside it is reached through a gate rather than stood at its region coordinate.
-    const ring = [...namedByMarket]
-      .filter((origin) => origin !== id && systems.some((entry) => slug(entry.name) === origin))
-      .sort();
-    ring.forEach((origin, index) => {
-      const angle = (index / ring.length) * Math.PI * 2;
-      const system = systems.find((entry) => slug(entry.name) === origin)!;
-      units[origin] = {
-        icon: 'system',
-        label: system.name,
-        at: { record: offsetOf(at, [Math.round(Math.cos(angle) * 48), Math.round(Math.sin(angle) * 38)]) },
-      };
-    });
-    for (const cast of MARKET_CAST) {
-      units[cast.id] = {
-        icon: cast.icon,
-        label: cast.label,
-        ...(cast.role ? { role: cast.role } : {}),
-        ...(cast.id === 'jita-4-4' ? { abilities: ['order-read', 'order-fill'] } : {}),
-        at: { record: offsetOf(at, cast.offset) },
-      };
-    }
+    // The pilot who takes the market work stands at the station the order is at.
+    units.saltyfish11 = {
+      icon: 'person',
+      label: 'saltyfish11',
+      role: 'admin',
+      at: { record: offsetOf(home['jita-4-4'] ?? MIDDLE, [16, 12]) },
+    };
   }
 
   return {

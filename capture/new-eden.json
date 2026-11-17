@@ -21,13 +21,6 @@
       "note": "00:00 Jita IV-4. Forty-five sell orders, and 4.24 is the best ask.",
       "steps": [
         {
-          "verb": "position",
-          "args": [
-            "jita-4-4",
-            "270,79"
-          ]
-        },
-        {
           "verb": "measured",
           "args": [
             "sell-orders",

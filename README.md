@@ -23,6 +23,9 @@ npm run build
 
 An existing clone takes `git submodule update --init`.
 
+`npm run capture` reads the systems and their units from ESI and rewrites `capture/units.json`. It is a manual read and
+not a build step: the capture is pinned data, and `npm run generate` is what runs on every dev, test and build.
+
 `npm run generate` writes the ninety project folders and the board from `capture/`; the dev, build and test scripts run
 it first, so a fresh clone needs nothing else. Neither `projects/` nor `projects.json` is committed, because both are
 generated from the pinned captures. The data, the endpoints and their pins are in [DATA.md](DATA.md). A hull's contract
@@ -31,9 +34,9 @@ is in [MESH.md](MESH.md).
 ## The tree
 
 ```
-capture/     the pinned ESI reads: ninety systems, two killmails, the Jita market
+capture/     the pinned ESI reads: the region, every system's units, two killmails, the Jita market
 src/         the sphere this app draws beside the shell, its camera, its hulls and the mapping
-tools/       systems.ts writes a project a system from the capture; board.mjs assembles projects.json
+tools/       capture.ts reads the units; systems.ts writes a project a system; board.mjs assembles projects.json
 projects/    generated: ninety folders, one a system, from capture/
 skene/       the frame, pinned as a submodule
 ```

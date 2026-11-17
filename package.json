@@ -15,7 +15,8 @@
     "typecheck": "tsc -b",
     "generate": "tsx tools/systems.ts && node tools/board.mjs",
     "board": "node tools/board.mjs",
-    "systems": "tsx tools/systems.ts"
+    "systems": "tsx tools/systems.ts",
+    "capture": "tsx tools/capture.ts"
   },
   "dependencies": {
     "@ssccsorg/skene-board": "file:./skene/packages/board",

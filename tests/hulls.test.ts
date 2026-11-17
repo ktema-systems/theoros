@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { haulerVariant, markGeometry, type MarkKind } from '../src/hulls';
 
 /** How many shapes each kind is drawn in, which is what the geometry cache is keyed by. */
-const VARIANTS: Record<MarkKind, number> = { hauler: 4, station: 1, gate: 1 };
+const VARIANTS: Record<MarkKind, number> = { hauler: 4, station: 1, gate: 1, planet: 1, moon: 1, belt: 1 };
 
 const shapes = () =>
   (Object.keys(VARIANTS) as MarkKind[]).flatMap((kind) =>

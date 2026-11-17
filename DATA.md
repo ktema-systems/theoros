@@ -1,6 +1,6 @@
 # The data this board holds
 
-Three pinned reads from ESI, the mapping that turns a capture into a run, and the notices the data asks for. The app's
+Four pinned reads from ESI, the mapping that turns a capture into a run, and the notices the data asks for. The app's
 own source is `src/`, the generator is `tools/systems.ts`, and the folders it writes are `projects/`. Those folders and
 `projects.json` are generated and not committed.
 
@@ -8,6 +8,12 @@ own source is `src/`, the generator is `tools/systems.ts`, and the folders it wr
 
 `capture/systems.json` is the region: ninety systems of The Forge with the id, name, security, gate count, station count
 and galactic coordinates ESI answers, read on 2026-11-15 at server 3698585.
+
+`capture/units.json` is what each system holds: the star, its planets with their moons and asteroid belts, and the gates
+and stations, every one of them with the name and the position in the system that ESI answers. It was read on 2026-11-17
+at server 3707965 and is pinned by that server. `npm run capture` reads it again. The file is committed because it is the
+source the board draws; a second read is a second capture rather than a build step, and the position of a moon is not
+something this repository can derive.
 
 `capture/new-eden.json` is the market read: the source, the endpoint, the revision and the adapter version, then the
 scenes the run is made of. It was read from ESI on 2026-11-15 at server 3698585, and these are the reads it stands on:
@@ -58,7 +64,10 @@ npm run generate
 ```
 
 One project a system. Each folder is `project.json` and `run.txt`: the place holds the system at the middle of its own
-box, the fleet if the system is Akkio's, and Jita's corridor if the system is Jita's. The sector is the system's bearing
+box, every planet, moon, belt, gate and station the capture holds, the fleet if the system is Akkio's, and the market
+station and its pilot if the system is Jita's. A unit's id is the spelling of its name, because the board draws the id and
+`40009077` is a row nobody can read. The positions are the source's: the radius is compressed so a moon and a gate stand
+on the same place, and the bearing is kept. The sector is the system's bearing
 on the shell, computed from its galactic coordinates, so the frame's minimap places every project at its own bearing.
 
 Every run is built by `src/mapping.ts` and read back with the kernel's parser before the folder is kept: a verb the reader

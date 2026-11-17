@@ -8,7 +8,7 @@ import * as THREE from 'three';
 // the geometry alone.
 
 /** The kinds of mark this builds a shape for. A system is drawn as a point of light elsewhere. */
-export type MarkKind = 'hauler' | 'station' | 'gate';
+export type MarkKind = 'hauler' | 'station' | 'gate' | 'planet' | 'moon' | 'belt';
 
 /** One primitive of an assembly: its shape, where it sits, how it turns, and how bright its plates read. */
 type Part = {
@@ -236,8 +236,26 @@ function gateParts(): Part[] {
   return parts;
 }
 
+/** A planet: a shaded body with one lit band, which is what tells it from a moon at a mark's size. */
+function planetParts(): Part[] {
+  return [
+    { shape: new THREE.SphereGeometry(0.032, 18, 12), tone: 1 },
+    { shape: new THREE.TorusGeometry(0.033, 0.0015, 4, 24), turn: [Math.PI / 2, 0, 0], tone: 1.12 },
+  ];
+}
+
+/** A moon: a body small enough that the orbit it stands in is what says what it is. */
+function moonParts(): Part[] {
+  return [{ shape: new THREE.SphereGeometry(0.018, 12, 8), tone: 0.95 }];
+}
+
+/** A belt: the ring its rocks are spread along. */
+function beltParts(): Part[] {
+  return [{ shape: new THREE.TorusGeometry(0.034, 0.004, 4, 20), turn: [Math.PI / 2, 0, 0], tone: 1.2 }];
+}
+
 /** How many shapes a kind is drawn in. A structure is one, a hull is four. */
-const VARIANTS: Record<MarkKind, number> = { hauler: 4, station: 1, gate: 1 };
+const VARIANTS: Record<MarkKind, number> = { hauler: 4, station: 1, gate: 1, planet: 1, moon: 1, belt: 1 };
 
 /**
  * The variant a ship is drawn in, from its own name.
@@ -259,6 +277,9 @@ const PARTS: Record<MarkKind, (variant: number) => Part[]> = {
   hauler: (variant) => [...haulerBase(), ...haulerFit(variant)],
   station: stationParts,
   gate: gateParts,
+  planet: planetParts,
+  moon: moonParts,
+  belt: beltParts,
 };
 
 const shapes = new Map<string, THREE.BufferGeometry>();
