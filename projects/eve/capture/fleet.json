@@ -1,0 +1,251 @@
+{
+  "pin": {
+    "source": "esi",
+    "endpoint": "https://esi.evetech.net/latest",
+    "revision": "server-3707965/2026-11-17",
+    "adapter": "eve/1"
+  },
+  "system": {
+    "id": 30000200,
+    "name": "Akkio"
+  },
+  "kills": [
+    {
+      "id": 139984294,
+      "time": "2026-11-17T11:51:36Z",
+      "victim": {
+        "character_id": 2124601357,
+        "corporation_id": 98822228,
+        "ship_type_id": 17715,
+        "damage_taken": 34146
+      },
+      "attackers": [
+        {
+          "ship_type_id": 24126,
+          "damage_done": 18213,
+          "final_blow": false,
+          "security_status": 0.0
+        },
+        {
+          "character_id": 2123705092,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 4208,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2120656041,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 2823,
+          "final_blow": false,
+          "security_status": 4.7
+        },
+        {
+          "character_id": 2121301474,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 2387,
+          "final_blow": false,
+          "security_status": 3.5
+        },
+        {
+          "character_id": 2123706154,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1884,
+          "final_blow": false,
+          "security_status": 4.3
+        },
+        {
+          "character_id": 2123498755,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1509,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2122703146,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1399,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2122699127,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 34562,
+          "damage_done": 923,
+          "final_blow": true,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2123294270,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 800,
+          "final_blow": false,
+          "security_status": 1.3
+        },
+        {
+          "character_id": 2122697292,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11198,
+          "damage_done": 0,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2123658787,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11198,
+          "damage_done": 0,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2124769638,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11198,
+          "damage_done": 0,
+          "final_blow": false,
+          "security_status": 1.0
+        }
+      ]
+    },
+    {
+      "id": 139984282,
+      "time": "2026-11-17T11:51:00Z",
+      "victim": {
+        "character_id": 2124577639,
+        "corporation_id": 98822228,
+        "ship_type_id": 29984,
+        "damage_taken": 14855
+      },
+      "attackers": [
+        {
+          "character_id": 2122699127,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 34562,
+          "damage_done": 3648,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "ship_type_id": 23999,
+          "damage_done": 3567,
+          "final_blow": false,
+          "security_status": 0.0
+        },
+        {
+          "character_id": 2123706154,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1951,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2122703146,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1668,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2120656041,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1548,
+          "final_blow": true,
+          "security_status": 4.7
+        },
+        {
+          "character_id": 2123294270,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1442,
+          "final_blow": false,
+          "security_status": 1.3
+        },
+        {
+          "character_id": 2121301474,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 1031,
+          "final_blow": false,
+          "security_status": 3.5
+        },
+        {
+          "character_id": 2123498755,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11393,
+          "damage_done": 0,
+          "final_blow": false,
+          "security_status": 4.9
+        },
+        {
+          "character_id": 2122697292,
+          "corporation_id": 98772842,
+          "alliance_id": 99003581,
+          "ship_type_id": 11198,
+          "damage_done": 0,
+          "final_blow": false,
+          "security_status": 4.9
+        }
+      ]
+    }
+  ],
+  "names": {
+    "448": "Warp Scrambler II",
+    "2889": "200mm AutoCannon II",
+    "3041": "Small Focused Pulse Laser II",
+    "3244": "Warp Disruptor II",
+    "11198": "Stiletto",
+    "11393": "Retribution",
+    "17715": "Gila",
+    "23999": "Gistatis Legionnaire",
+    "24126": "Gist Nephilim",
+    "29984": "Tengu",
+    "34562": "Svipul",
+    "30000200": "Akkio",
+    "98772842": "New Eden Light Point College",
+    "98822228": "GABELLA CORP",
+    "99003581": "Fraternity.",
+    "2120656041": "Scorpio D",
+    "2121301474": "FourierJW",
+    "2122697292": "Rehe7",
+    "2122699127": "saltyfish11",
+    "2122703146": "Rehe8",
+    "2123294270": "R IO",
+    "2123498755": "ygwsm1",
+    "2123658787": "0Aurora03",
+    "2123705092": "Yinuo LIN 0",
+    "2123706154": "4442228",
+    "2124577639": "ChicagoBLG",
+    "2124601357": "BLGChicago",
+    "2124769638": "raindrop233"
+  }
+}

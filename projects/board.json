@@ -1,0 +1,5 @@
+{
+  "note": "One board and one project: New Eden, read from ESI. The board names the project a bare address opens on.",
+  "opens": "eve-online",
+  "order": ["eve-online"]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "eve",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "New Eden: the EVE Online space as a board of its own, drawn by Skene.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -b",
+    "board": "node tools/board.mjs",
+    "place": "node projects/eve/tools/place.mjs"
+  },
+  "dependencies": {
+    "@ssccsorg/skene-board": "file:../../../skene/packages/board",
+    "@ssccsorg/skene-frame": "file:../../../skene/packages/frame",
+    "@ssccsorg/skene-kernel": "file:../../../skene/packages/kernel",
+    "@ssccsorg/skene-ui": "file:../../../skene/packages/ui",
+    "@ssccsorg/skene-view-graph": "file:../../../skene/packages/view-graph",
+    "@ssccsorg/skene-view-shell": "file:../../../skene/packages/view-shell",
+    "@react-three/fiber": "^9.4.0",
+    "lucide-react": "^0.548.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.181.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.16",
+    "@types/dagre": "^0.7.53",
+    "@types/node": "^24.9.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/three": "^0.181.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "tailwindcss": "^4.1.16",
+    "tsx": "^4.20.6",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}
