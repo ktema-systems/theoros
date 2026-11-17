@@ -53,7 +53,6 @@ demonstration exists to argue against.
 ## Writing the projects
 
 ```bash
-cd apps/eve
 npm run systems
 ```
 

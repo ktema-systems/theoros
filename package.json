@@ -1,9 +1,9 @@
 {
-  "name": "eve",
+  "name": "theoros",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "New Eden: the EVE Online space as a board of its own, drawn by Skene.",
+  "description": "A board of the EVE Online space read from ESI: one star system a project, drawn by skene.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -14,12 +14,12 @@
     "systems": "tsx tools/systems.ts"
   },
   "dependencies": {
-    "@ssccsorg/skene-board": "file:../../../skene/packages/board",
-    "@ssccsorg/skene-frame": "file:../../../skene/packages/frame",
-    "@ssccsorg/skene-kernel": "file:../../../skene/packages/kernel",
-    "@ssccsorg/skene-ui": "file:../../../skene/packages/ui",
-    "@ssccsorg/skene-view-graph": "file:../../../skene/packages/view-graph",
-    "@ssccsorg/skene-view-shell": "file:../../../skene/packages/view-shell",
+    "@ssccsorg/skene-board": "file:./skene/packages/board",
+    "@ssccsorg/skene-frame": "file:./skene/packages/frame",
+    "@ssccsorg/skene-kernel": "file:./skene/packages/kernel",
+    "@ssccsorg/skene-ui": "file:./skene/packages/ui",
+    "@ssccsorg/skene-view-graph": "file:./skene/packages/view-graph",
+    "@ssccsorg/skene-view-shell": "file:./skene/packages/view-shell",
     "@react-three/fiber": "^9.4.0",
     "lucide-react": "^0.548.0",
     "react": "^19.2.0",
@@ -41,5 +41,10 @@
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
     "vitest": "^3.2.4"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ktema-systems/theoros.git"
   }
 }

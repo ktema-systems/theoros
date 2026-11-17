@@ -1,0 +1,3 @@
+[submodule "skene"]
+	path = skene
+	url = https://github.com/ssccsorg/skene.git

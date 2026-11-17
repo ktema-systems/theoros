@@ -132,7 +132,7 @@ A `.glb` is acceptable if it is worth the loader. It would need `GLTFLoader` fro
 - No em dashes.
 - No EVE unit ids in the source. A hull takes its identity from props and not from a constant, and the
   capture is where a system's name lives.
-- `npm run typecheck`, `npm test` and `npm run build` in `apps/eve` have to pass.
+- `npm run typecheck`, `npm test` and `npm run build` in this repository have to pass.
 - The app warns above 1,200 kB per chunk. The space chunk is about 1,000 kB today.
 
 ## What the caller passes
