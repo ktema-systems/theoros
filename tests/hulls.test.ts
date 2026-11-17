@@ -6,9 +6,15 @@
 import { expect, test } from 'vitest';
 import * as THREE from 'three';
 
-import { markGeometry, type MarkKind } from '../src/hulls';
+import { haulerVariant, markGeometry, type MarkKind } from '../src/hulls';
 
-const KINDS: MarkKind[] = ['hauler', 'station', 'gate'];
+/** How many shapes each kind is drawn in, which is what the geometry cache is keyed by. */
+const VARIANTS: Record<MarkKind, number> = { hauler: 4, station: 1, gate: 1 };
+
+const shapes = () =>
+  (Object.keys(VARIANTS) as MarkKind[]).flatMap((kind) =>
+    Array.from({ length: VARIANTS[kind] }, (_, variant) => ({ kind, variant, geometry: markGeometry(kind, variant) })),
+  );
 
 const sizeOf = (geometry: THREE.BufferGeometry): THREE.Vector3 => {
   geometry.computeBoundingBox();
@@ -20,65 +26,89 @@ const centreOf = (geometry: THREE.BufferGeometry): THREE.Vector3 => {
   return geometry.boundingBox!.getCenter(new THREE.Vector3());
 };
 
-test('each kind is one geometry, shared by every mark of that kind', () => {
-  for (const kind of KINDS) expect(markGeometry(kind)).toBe(markGeometry(kind));
+test('each kind and variant is one geometry, shared by every mark drawn in it', () => {
+  for (const { kind, variant, geometry } of shapes()) {
+    expect(markGeometry(kind, variant), `${kind} ${variant}`).toBe(geometry);
+    expect(markGeometry(kind, variant), `${kind} ${variant} is stable`).toBe(markGeometry(kind, variant));
+  }
 });
 
 test('a hull is the size a mark on the shell is allowed to be', () => {
-  for (const kind of KINDS) {
-    const size = sizeOf(markGeometry(kind));
+  for (const { kind, variant, geometry } of shapes()) {
+    const size = sizeOf(geometry);
     const largest = Math.max(size.x, size.y, size.z);
-    expect(largest, `${kind} is at most 0.08`).toBeLessThanOrEqual(0.08);
-    expect(largest, `${kind} is a mark rather than a speck`).toBeGreaterThan(0.03);
-    const middle = centreOf(markGeometry(kind));
-    expect(Math.abs(middle.x), `${kind} x`).toBeLessThanOrEqual(0.01);
-    expect(Math.abs(middle.y), `${kind} y`).toBeLessThanOrEqual(0.01);
-    expect(Math.abs(middle.z), `${kind} z`).toBeLessThanOrEqual(0.01);
+    expect(largest, `${kind} ${variant} is at most 0.08`).toBeLessThanOrEqual(0.08);
+    expect(largest, `${kind} ${variant} is a mark rather than a speck`).toBeGreaterThan(0.03);
+    const middle = centreOf(geometry);
+    expect(Math.abs(middle.x), `${kind} ${variant} x`).toBeLessThanOrEqual(0.01);
+    expect(Math.abs(middle.y), `${kind} ${variant} y`).toBeLessThanOrEqual(0.01);
+    expect(Math.abs(middle.z), `${kind} ${variant} z`).toBeLessThanOrEqual(0.01);
   }
 });
 
 test('a hull stays inside the triangle budget', () => {
-  for (const kind of KINDS) {
-    const triangles = markGeometry(kind).getAttribute('position').count / 3;
-    expect(triangles, `${kind} triangles`).toBeLessThanOrEqual(800);
+  for (const { kind, variant, geometry } of shapes()) {
+    const triangles = geometry.getAttribute('position').count / 3;
+    expect(triangles, `${kind} ${variant} triangles`).toBeLessThanOrEqual(800);
   }
 });
 
 test('a hull carries its own shading, because the scene carries no lights', () => {
-  for (const kind of KINDS) {
-    const colours = markGeometry(kind).getAttribute('color');
-    expect(colours, `${kind} has vertex colours`).toBeDefined();
+  for (const { kind, variant, geometry } of shapes()) {
+    const colours = geometry.getAttribute('color');
+    expect(colours, `${kind} ${variant} has vertex colours`).toBeDefined();
     let shadowed = 0;
     let lit = 0;
     for (let index = 0; index < colours.count; index += 1) {
       const value = colours.getX(index);
-      expect(value, `${kind} vertex brightness at ${index}`).toBeGreaterThan(0);
-      expect(value, `${kind} vertex brightness at ${index}`).toBeLessThanOrEqual(1);
+      expect(value, `${kind} ${variant} vertex brightness at ${index}`).toBeGreaterThan(0);
+      expect(value, `${kind} ${variant} vertex brightness at ${index}`).toBeLessThanOrEqual(1);
       if (value < 0.6) shadowed += 1;
       if (value > 0.9) lit += 1;
     }
     // A form drawn at one brightness is a silhouette, so both ends of the range have to be present.
-    expect(shadowed, `${kind} has faces away from the light`).toBeGreaterThan(0);
-    expect(lit, `${kind} has faces toward the light`).toBeGreaterThan(0);
+    expect(shadowed, `${kind} ${variant} has faces away from the light`).toBeGreaterThan(0);
+    expect(lit, `${kind} ${variant} has faces toward the light`).toBeGreaterThan(0);
   }
 });
 
-test('the hauler is longer than it is wide, and tapers to its nose', () => {
-  const geometry = markGeometry('hauler');
-  const size = sizeOf(geometry);
-  expect(size.z, 'length against width').toBeGreaterThan(size.x);
-  expect(size.z, 'length against height').toBeGreaterThan(size.y);
+test('the four hauler variants are four shapes rather than one shape drawn four times', () => {
+  // A fleet of three names is three hulls only if the fitting out is what changes, so the geometries are compared by
+  // what they draw and not by the name they were asked for.
+  const signature = (variant: number) =>
+    Array.from(markGeometry('hauler', variant).getAttribute('position').array).join(',');
+  const marks = new Set(Array.from({ length: VARIANTS.hauler }, (_, variant) => signature(variant)));
+  expect(marks.size, 'no two variants are the same geometry').toBe(VARIANTS.hauler);
+});
 
-  const position = geometry.getAttribute('position');
-  const front = geometry.boundingBox!.min.z + 0.006;
-  let widest = 0;
-  let nose = 0;
-  for (let index = 0; index < position.count; index += 1) {
-    widest = Math.max(widest, Math.abs(position.getX(index)));
-    if (position.getZ(index) <= front) nose = Math.max(nose, Math.abs(position.getX(index)));
+test('a hull keeps the variant its own name gives it, and the fleet is more than one', () => {
+  // The name is the seed, so a ship is the same ship on every screen and a reload does not re-roll it.
+  for (const name of ['Retribution', 'Stiletto', 'Svipul']) {
+    expect(haulerVariant(name), name).toBe(haulerVariant(name));
+    expect(haulerVariant(name), name).toBeGreaterThanOrEqual(0);
+    expect(haulerVariant(name), name).toBeLessThan(VARIANTS.hauler);
   }
-  expect(nose, 'the nose has a width rather than a point').toBeGreaterThan(0);
-  expect(nose * 2, 'the nose is narrower than the hull').toBeLessThan(widest);
+  expect(new Set(['Retribution', 'Stiletto', 'Svipul'].map(haulerVariant)).size, 'three hulls, not one').toBeGreaterThan(1);
+});
+
+test('the hauler is longer than it is wide, and tapers to its nose', () => {
+  for (let variant = 0; variant < VARIANTS.hauler; variant += 1) {
+    const geometry = markGeometry('hauler', variant);
+    const size = sizeOf(geometry);
+    expect(size.z, `variant ${variant} length against width`).toBeGreaterThan(size.x);
+    expect(size.z, `variant ${variant} length against height`).toBeGreaterThan(size.y);
+
+    const position = geometry.getAttribute('position');
+    const front = geometry.boundingBox!.min.z + 0.006;
+    let widest = 0;
+    let nose = 0;
+    for (let index = 0; index < position.count; index += 1) {
+      widest = Math.max(widest, Math.abs(position.getX(index)));
+      if (position.getZ(index) <= front) nose = Math.max(nose, Math.abs(position.getX(index)));
+    }
+    expect(nose, `variant ${variant} has a nose rather than a point`).toBeGreaterThan(0);
+    expect(nose * 2, `variant ${variant} is narrower at the nose than the hull`).toBeLessThan(widest);
+  }
 });
 
 test('the exhausts sit at the tail', () => {

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// The shapes a mark is drawn with, built from primitives and shared by every mark of that kind.
+// The shapes a mark is drawn with, built from primitives and shared by every mark of a kind and variant.
 //
 // MESH.md states the contract these keep: no imported model, no loader, at most 3,000 triangles, largest dimension
 // 0.08 units, nose at -Z, and identity from props rather than from a constant. The scene carries no lights, so the
@@ -75,14 +75,21 @@ function bake(parts: Part[]): THREE.BufferGeometry {
 }
 
 const box = (width: number, height: number, depth: number) => new THREE.BoxGeometry(width, height, depth);
+const drum = (radius: number, length: number, sides: number) =>
+  new THREE.CylinderGeometry(radius, radius, length, sides);
+
+/** A plate laid on a face: thin, slightly proud, and darker than the hull so the seam reads as a seam. */
+function plate(parts: Part[], width: number, height: number, depth: number, at: [number, number, number], tone: number) {
+  parts.push({ shape: box(width, height, depth), at, tone });
+}
 
 /**
  * A freighter: a spine carrying containers, a bridge over the nose, and two drives on outriggers.
  *
- * The nose is at -Z and the whole hull is 0.073 long, which is what a mark on a shell of radius 1.25 is allowed to
- * be. It reads as a hauler rather than as a pointed ship because the cargo deck is the widest thing on it.
+ * The nose is at -Z and the hull is 0.073 long, which is what a mark on a shell of radius 1.25 is allowed to be. It
+ * reads as a hauler rather than as a pointed ship because the cargo deck is the widest thing on it.
  */
-function haulerParts(): Part[] {
+function haulerBase(): Part[] {
   const parts: Part[] = [
     { shape: box(0.03, 0.01, 0.038), at: [0, 0, 0.004], tone: 0.92 },
     { shape: box(0.02, 0.012, 0.02), at: [0, 0, -0.025] },
@@ -98,14 +105,61 @@ function haulerParts(): Part[] {
     { shape: box(0.003, 0.009, 0.012), at: [0, -0.009, 0.02], tone: 0.8 },
     { shape: box(0.032, 0.013, 0.009), at: [0, 0, 0.03], tone: 0.88 },
   ];
+  // A belt of plates down each flank, a lit band behind the prow, and a recessed keel: the three values that make a
+  // flat side read as structure at the size a mark is drawn.
+  plate(parts, 0.031, 0.003, 0.005, [0, 0.006, -0.012], 1.04);
+  plate(parts, 0.002, 0.006, 0.02, [-0.016, 0, -0.002], 0.7);
+  plate(parts, 0.002, 0.006, 0.02, [0.016, 0, -0.002], 0.7);
+  plate(parts, 0.014, 0.002, 0.006, [0, -0.006, -0.016], 0.62);
   for (const side of [-1, 1]) {
     parts.push({ shape: box(0.011, 0.003, 0.007), at: [side * 0.012, 0.001, 0.014], tone: 0.66 });
     parts.push({
-      shape: new THREE.CylinderGeometry(0.005, 0.005, 0.026, 6),
+      shape: drum(0.005, 0.026, 6),
       at: [side * 0.018, 0.002, 0.014],
       turn: [Math.PI / 2, 0, 0],
       tone: 0.96,
     });
+  }
+  return parts;
+}
+
+/**
+ * The kit a hull is fitted out with, one set a ship.
+ *
+ * A fleet is one silhouette repeated, and three hulls that read as one box are three names without three ships. The
+ * variant is chosen from the ship's own name (`haulerVariant`), so a hull keeps its shape wherever it is drawn.
+ */
+function haulerFit(variant: number): Part[] {
+  const parts: Part[] = [];
+  if (variant === 0) {
+    // Freight: fins over the deck and radiators on the flanks, which is the widest plan of the four.
+    for (const side of [-1, 1]) {
+      parts.push({ shape: box(0.002, 0.012, 0.016), at: [side * 0.007, 0.014, 0.012], turn: [0, 0, -side * 0.22], tone: 0.78 });
+      parts.push({ shape: box(0.0015, 0.018, 0.022), at: [side * 0.018, 0.003, -0.004], turn: [0, 0, -side * 0.1], tone: 0.5 });
+    }
+    plate(parts, 0.026, 0.002, 0.003, [0, 0.013, 0.006], 0.86);
+  } else if (variant === 1) {
+    // Armoured: a prow of angled plates, skirts down the flanks, and a turret ring on the deck.
+    for (const side of [-1, 1]) {
+      parts.push({ shape: box(0.005, 0.006, 0.012), at: [side * 0.0065, 0.006, -0.026], turn: [0, -side * 0.2, 0], tone: 1.0 });
+      parts.push({ shape: box(0.002, 0.012, 0.03), at: [side * 0.017, -0.004, -0.004], tone: 0.6 });
+    }
+    parts.push({ shape: box(0.016, 0.003, 0.014), at: [0, -0.011, 0.006], tone: 0.72 });
+    parts.push({ shape: drum(0.005, 0.004, 8), at: [0, 0.014, -0.012], tone: 0.9 });
+  } else if (variant === 2) {
+    // Recon: a boom ahead of the prow and a mast with a dish, which is the only silhouette with a line above it.
+    parts.push({ shape: box(0.002, 0.002, 0.008), at: [-0.006, 0.002, -0.038], tone: 1.1 });
+    parts.push({ shape: box(0.004, 0.004, 0.004), at: [-0.006, 0.005, -0.036], tone: 0.95 });
+    parts.push({ shape: box(0.002, 0.016, 0.002), at: [0.005, 0.014, 0.012], turn: [0.3, 0, 0], tone: 0.85 });
+    parts.push({ shape: drum(0.006, 0.002, 10), at: [0.006, 0.022, 0.014], turn: [0.5, 0, 0], tone: 1.12 });
+    parts.push({ shape: box(0.01, 0.003, 0.008), at: [0, 0.014, 0.024], tone: 0.7 });
+  } else {
+    // Twin: two tail booms with fins, and a second row of containers between them.
+    for (const side of [-1, 1]) {
+      parts.push({ shape: drum(0.003, 0.016, 6), at: [side * 0.011, 0.004, 0.03], turn: [Math.PI / 2, 0, 0], tone: 0.9 });
+      parts.push({ shape: box(0.002, 0.01, 0.006), at: [side * 0.011, 0.01, 0.036], tone: 0.8 });
+    }
+    parts.push({ shape: box(0.018, 0.006, 0.012), at: [0, 0.014, 0.02], tone: 0.66 });
   }
   return parts;
 }
@@ -133,6 +187,11 @@ function stationParts(): Part[] {
     // The panels are angled opposite ways, so one catches the light more than the other.
     { shape: box(0.002, 0.013, 0.01), at: [-0.013, 0, 0.002], turn: [0, 0, 0.18], tone: 0.62 },
     { shape: box(0.002, 0.013, 0.01), at: [0.013, 0, 0.002], turn: [0, 0, -0.18], tone: 0.62 },
+    // A docking collar and two habitat drums make the ring a place a ship goes rather than a hoop.
+    { shape: drum(0.006, 0.004, 8), at: [0, 0, 0.012], turn: [Math.PI / 2, 0, 0], tone: 1.06 },
+    { shape: drum(0.005, 0.01, 8), at: [0, 0.021, 0], turn: [0, 0, Math.PI / 2], tone: 0.86 },
+    { shape: drum(0.005, 0.01, 8), at: [0, -0.021, 0], turn: [0, 0, Math.PI / 2], tone: 0.86 },
+    { shape: box(0.026, 0.0015, 0.008), at: [0, 0.006, 0.014], turn: [0, 0, 0.2], tone: 0.5 },
   ];
   for (const quarter of [0, 1, 2, 3]) {
     const angle = (quarter * Math.PI) / 2;
@@ -158,27 +217,64 @@ function gateParts(): Part[] {
     { shape: new THREE.TorusGeometry(0.013, 0.0016, 4, 14), turn: [Math.PI / 2, 0, 0], tone: 1.2 },
     { shape: box(0.005, 0.01, 0.005), at: [0, -0.024, 0], tone: 0.72 },
     { shape: box(0.014, 0.005, 0.009), at: [0, -0.03, 0], tone: 0.64 },
+    // Four anchors and a collar, so the ring is a mechanism rather than a circle.
+    { shape: new THREE.TorusGeometry(0.0165, 0.002, 4, 12), turn: [Math.PI / 2, 0, 0], tone: 0.6 },
   ];
+  for (const quarter of [0, 1, 2, 3]) {
+    const angle = (quarter * Math.PI) / 2 + Math.PI / 4;
+    parts.push({
+      shape: box(0.006, 0.004, 0.004),
+      at: [Math.cos(angle) * 0.019, 0, Math.sin(angle) * 0.019],
+      turn: [0, -angle, 0],
+      tone: 0.94,
+    });
+  }
   for (const side of [-1, 1]) {
     parts.push({ shape: box(0.006, 0.003, 0.004), at: [side * 0.011, 0.017, 0], turn: [0, 0, side * 0.6], tone: 0.78 });
+    parts.push({ shape: box(0.004, 0.003, 0.006), at: [side * 0.011, 0.019, 0.004], tone: 0.7 });
   }
   return parts;
 }
 
-const PARTS: Record<MarkKind, () => Part[]> = { hauler: haulerParts, station: stationParts, gate: gateParts };
+/** How many shapes a kind is drawn in. A structure is one, a hull is four. */
+const VARIANTS: Record<MarkKind, number> = { hauler: 4, station: 1, gate: 1 };
+
+/**
+ * The variant a ship is drawn in, from its own name.
+ *
+ * A hull is named once and drawn many times, so the name is the whole seed: the same ship is the same ship on every
+ * screen, and a fleet of three names is a fleet of three shapes.
+ */
+export function haulerVariant(name: string): number {
+  // FNV-1a, because it spreads three names the capture holds across three variants.
+  let hash = 2166136261;
+  for (const letter of name) {
+    hash ^= letter.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % VARIANTS.hauler;
+}
+
+const PARTS: Record<MarkKind, (variant: number) => Part[]> = {
+  hauler: (variant) => [...haulerBase(), ...haulerFit(variant)],
+  station: stationParts,
+  gate: gateParts,
+};
 
 const shapes = new Map<string, THREE.BufferGeometry>();
 
 /**
- * The geometry for one kind of mark, built on first use and shared afterwards.
+ * The geometry for one kind of mark and variant, built on first use and shared afterwards.
  *
- * A hull is the same object on every mark of its kind, so a hundred haulers are one geometry and one draw call
- * each, and a pick only changes the material's colour.
+ * A hull is the same object on every mark of its kind and variant, so eleven haulers are four geometries and eleven
+ * draws, and a pick only changes the material's colour.
  */
-export function markGeometry(kind: MarkKind | 'exhaust'): THREE.BufferGeometry {
-  const cached = shapes.get(kind);
+export function markGeometry(kind: MarkKind | 'exhaust', variant = 0): THREE.BufferGeometry {
+  const shape = kind === 'exhaust' ? 0 : variant % VARIANTS[kind];
+  const key = `${kind}:${shape}`;
+  const cached = shapes.get(key);
   if (cached) return cached;
-  const made = bake(kind === 'exhaust' ? exhaustParts() : PARTS[kind]());
-  shapes.set(kind, made);
+  const made = bake(kind === 'exhaust' ? exhaustParts() : PARTS[kind](shape));
+  shapes.set(key, made);
   return made;
 }

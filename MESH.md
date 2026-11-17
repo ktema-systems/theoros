@@ -16,9 +16,10 @@ entity large would be making a claim about importance that the record does not m
 ## What was decided
 
 No model is imported. The marks are built in `src/hulls.ts` from boxes, cones, cylinders and
-tori, and each kind is one geometry shared by every mark of that kind: a hauler is 204 triangles, a
-station 268, a gate 340, with no texture, no loader and no asset. Shading is baked into the vertex
-colours, because the scene carries no lights.
+tori, and a kind is a small set of variants, one geometry each, shared by every mark drawn in it: the hauler is four
+fit-outs at 312 to 344 triangles, a station is 376, a gate 508, with no texture, no loader and no asset. A hauler's
+variant comes from its own name, so Retribution, Stiletto and Svipul are three shapes rather than one silhouette three
+times. Shading is baked into the vertex colours, because the scene carries no lights.
 
 That is a settled decision rather than a first attempt, for two reasons. CCP's terms do not allow an EVE
 model on a public page without written permission, so using one would make the demonstration's legal
@@ -75,10 +76,13 @@ Current mark sizes, in the same units:
 
 | Mark | Geometry | Bounding box | Triangles |
 |---|---|---|---|
-| hauler | 11 boxes, a cone and two cylinders | 0.045 x 0.027 x 0.073 | 204 |
-| station | a core, a torus, four spokes, a mast and two panels | 0.059 x 0.014 x 0.062 | 268 |
-| gate | two tori, an arm and two struts | 0.046 x 0.052 x 0.046 | 340 |
-| system | `sphereGeometry` | radius 0.006 | 80 |
+| hauler 0, freight | a spine, containers, fins and radiators | 0.045 x 0.034 x 0.072 | 312 |
+| hauler 1, armoured | the spine with prow plates, skirts and a turret ring | 0.045 x 0.030 x 0.072 | 344 |
+| hauler 2, recon | the spine with a forward boom, a mast and a dish | 0.045 x 0.039 x 0.076 | 340 |
+| hauler 3, twin | the spine with two tail booms, fins and a second row | 0.045 x 0.031 x 0.077 | 336 |
+| station | a core, a torus, four spokes, a mast, drums and a collar | 0.059 x 0.052 x 0.062 | 376 |
+| gate | three tori, four anchors, an arm and four struts | 0.046 x 0.053 x 0.046 | 508 |
+| system | a shader-shaded sphere, a corona sprite and three planets | radius 0.22 at twice the shell | none |
 | starfield | `points` | 0.018, at radius 7 to 11 | none |
 
 The system the pilot is in is not a hull: it is a body standing at twice the shell's radius, a sphere of radius 0.22 with
@@ -86,7 +90,7 @@ its face shaded by a two-line shader (bright at the middle, warmer at the limb),
 radius 0.03 to 0.06 on rings derived from the system's own id. A place's marks are read in front of it, so the star never
 stands where a station or a hull stands.
 
-Longest side against the contract: the hauler's 0.073 is inside the 0.08 a mark is allowed, and the
+Longest side against the contract: the hauler's 0.077 is inside the 0.08 a mark is allowed, and the
 station and the gate sit below it so no kind of entity is drawn larger than another on the strength of
 what it is.
 
@@ -136,11 +140,11 @@ A `.glb` is acceptable if it is worth the loader. It would need `GLTFLoader` fro
 `space.tsx` picks a shape from the unit's icon and leaves the pick with the reading:
 
 ```tsx
-{system.icon === 'hauler' ? <Hauler colour={colour} heading={system.heading} />
+{system.icon === 'hauler' ? <Hauler colour={colour} heading={system.heading} variant={haulerVariant(label)} />
   : system.icon === 'station' ? <Structure kind="station" colour={colour} />
   : system.icon === 'gate' ? <Structure kind="gate" colour={colour} />
   : <mesh>…the system mark, a point of light…</mesh>}
 ```
 
-A hull keeps that shape: it takes `colour` and, when it is worth it, a `heading` in radians, and it owns
+A hull keeps that shape: it takes `colour`, a `heading` in radians, and the `variant` its name gives it, and it owns
 no state. `onClick` stays with the caller, because picking is the reading's and not the model's.

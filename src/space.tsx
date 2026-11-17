@@ -18,7 +18,7 @@ import {
 import { registerReading, type Board } from '@ssccsorg/skene-frame/lib/readings';
 import { useScenario } from '@ssccsorg/skene-frame/stores/scenario';
 import { cn } from '@ssccsorg/skene-ui';
-import { markGeometry } from './hulls';
+import { haulerVariant, markGeometry } from './hulls';
 import { useView } from './view';
 
 // New Eden, read from the pilot's seat: the stars behind, the systems the run stands in, and the route each
@@ -144,12 +144,13 @@ function Pilot({ camera }: { camera: RefObject<THREE.PerspectiveCamera | null> }
 /**
  * A hauler: the freighter hull from `hulls.ts`, with the two exhausts drawn as light rather than as metal.
  *
- * The nose points at -Z, because that is the camera's forward, and the heading turns the hull onto its path.
+ * The nose points at -Z, because that is the camera's forward, and the heading turns the hull onto its path. The fit-out
+ * comes from the ship's name, so a fleet of three names is three hulls rather than one silhouette three times.
  */
-function Hauler({ colour, heading }: { colour: string; heading: number }) {
+function Hauler({ colour, heading, variant }: { colour: string; heading: number; variant: number }) {
   return (
     <group rotation={[0, heading, 0]}>
-      <mesh geometry={markGeometry('hauler')}>
+      <mesh geometry={markGeometry('hauler', variant)}>
         <meshBasicMaterial color={colour} vertexColors />
       </mesh>
       <mesh geometry={markGeometry('exhaust')}>
@@ -211,7 +212,7 @@ function Mark({ system, picked, onPick }: { system: Marked; picked: boolean; onP
       }}
     >
       {system.icon === 'hauler' ? (
-        <Hauler colour={colour} heading={system.heading} />
+        <Hauler colour={colour} heading={system.heading} variant={haulerVariant(system.label ?? system.id)} />
       ) : system.icon === 'station' ? (
         <Structure kind="station" colour={colour} />
       ) : system.icon === 'gate' ? (
