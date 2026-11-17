@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import * as THREE from 'three';
-import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Sun } from 'lucide-react';
 import sky from '../assets/sky.jpg?url';
 import {
   LEVEL,
@@ -925,7 +925,7 @@ export const EVE_SPACE = registerReading({
   key: 'eve-space',
   path: '/eden',
   View: EveSpace,
-  button: { order: 11, title: 'new eden', Icon: Star },
+  button: { order: 11, title: 'new eden', Icon: Sun },
   // A pane of the board rather than a place the cockpit goes to, which is what puts it beside the shell.
   pane: true,
   // It draws the units the run has placed, so it is offered wherever a space has any.
