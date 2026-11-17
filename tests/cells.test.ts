@@ -16,6 +16,7 @@ import {
   onShell,
   shellAt,
 } from '@ssccsorg/skene-board';
+import { fromPlace } from '@ssccsorg/skene-frame/lib/world';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 
@@ -27,6 +28,7 @@ interface Project {
 }
 
 interface Place {
+  view?: [number, number, number, number];
   sector: [number, number];
   cell?: [number, number][];
   mark?: string;
@@ -140,13 +142,15 @@ test('a place lays every member it stands inside its own cell', () => {
     const cell = cellOfPlace(place)!;
     const reach = cellReach(cell);
     const middle = shellAt(cellCentre(cell), 1);
+    // The place's own numbers become the scene's by the one conversion the frame uses, so the point this test asks
+    // about is the point the board draws.
+    const view = place.view ?? [0, 0, 520, 176];
+    const aspect = view[2] / view[3];
+    const sector = [place.sector[0] * (Math.PI / 180), place.sector[1] * (Math.PI / 180)] as [number, number];
     for (const [id, unit] of Object.entries(place.units)) {
       const at = Object.values(unit.at)[0];
       if (!at) continue;
-      const point = onShell(
-        [(at[0] - 260) / 176, at[1] / 176 - 0.5, 0],
-        { aspect: 520 / 176, sector: [place.sector[0] * (Math.PI / 180), place.sector[1] * (Math.PI / 180)], cell },
-      );
+      const point = onShell(fromPlace({ view } as Parameters<typeof fromPlace>[0], at[0], at[1]), { aspect, sector, cell });
       expect(angleBetween(point, middle), `${place.id}/${id} stands inside its cell`).toBeLessThan(reach + 1e-6);
     }
   }
