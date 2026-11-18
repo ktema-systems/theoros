@@ -46,6 +46,7 @@ interface System {
 interface Unit {
   icon: string;
   label?: string;
+  model?: string;
   role?: string;
   at: { record: [number, number] };
 }
@@ -59,7 +60,8 @@ const held = (
       string,
       {
         star: { temperature: number };
-        planets: { moons: unknown[]; belts: unknown[] }[];
+        planets: { name: string; typeName: string; moons: unknown[]; belts: unknown[] }[];
+        stations: { name: string; typeName: string }[];
       }
     >;
   }
@@ -134,7 +136,26 @@ test('a project is its own system, named and stood where the capture puts it', (
 });
 
 test('the deployment installs the reading it names', () => {
-  expect(readFileSync(`${ROOT}src/main.tsx`, 'utf8'), 'the entry installs the reading').toContain("'./space'");
+  const entry = readFileSync(`${ROOT}src/main.tsx`, 'utf8');
+  expect(entry, 'the entry installs the space').toContain("'./space'");
+  expect(entry, 'the entry installs the inventory').toContain("'./system'");
+});
+
+test('a unit carries the type ESI names for it, and every project offers the inventory', () => {
+  for (const system of systems) {
+    const id = slug(system.name);
+    const one = held[String(system.id)];
+    const units = Object.values(placeOf(id)?.units ?? {});
+    for (const planet of one.planets) {
+      const unit = units.find((each) => each.label === planet.name);
+      expect(unit?.model, `${planet.name} type`).toBe(planet.typeName);
+    }
+    for (const station of one.stations) {
+      const unit = units.find((each) => each.label === station.name);
+      expect(unit?.model, `${station.name} type`).toBe(station.typeName);
+    }
+    expect(viewsOf(id)?.on, `${id} offers the inventory`).toContain('eve-system');
+  }
 });
 
 test('every run parses, counts what it wrote, and stands on units of its own place', () => {

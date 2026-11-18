@@ -206,7 +206,7 @@ const ABILITIES = [
 ];
 
 /** The views a system stands: the sphere, the region drawn beside it, and the frame's own readings. */
-const VIEWS = { seat: 'shell', on: ['eve-space', 'shell', 'records', 'graph', 'intents', 'act'] };
+const VIEWS = { seat: 'shell', on: ['eve-space', 'eve-system', 'shell', 'records', 'graph', 'intents', 'act'] };
 
 /** Clamp a unit to the box, so a body near the edge is still drawn inside the patch. */
 const inside = ([x, y]: [number, number]): [number, number] => [
@@ -280,7 +280,7 @@ function placeOf(system: System) {
     const here = at([planet.x, planet.z]);
     const key = keyOf(planet.name);
     home[key] = here;
-    units[key] = { icon: 'planet', label: planet.name, model: String(planet.type), at: { record: here } };
+    units[key] = { icon: 'planet', label: planet.name, model: planet.typeName, at: { record: here } };
     const mostMoon = Math.max(...planet.moons.map((moon) => Math.hypot(moon.x - planet.x, moon.z - planet.z)), 0);
     for (const moon of planet.moons) {
       units[keyOf(moon.name)] = { icon: 'moon', label: moon.name, at: { record: around(here, moon, planet, mostMoon, 5) } };
@@ -307,7 +307,7 @@ function placeOf(system: System) {
     units[key] = {
       icon: 'station',
       label: station.name,
-      model: String(station.type),
+      model: station.typeName,
       ...(key === 'jita-4-4' ? { abilities: ['order-read', 'order-fill'] } : {}),
       at: { record: home[key] },
     };

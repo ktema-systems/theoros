@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import '@ssccsorg/skene-view-shell';
 import '@ssccsorg/skene-view-graph';
 import './space';
+import './system';
 import { Frame, offTheShelf } from '@ssccsorg/skene-frame';
 import { brand } from './brand';
 import './styles.css';
