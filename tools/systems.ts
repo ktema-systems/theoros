@@ -53,6 +53,7 @@ interface Unit {
   model?: string;
   role?: string;
   abilities?: string[];
+  attributes?: { facts?: { label: string; value: string }[] };
   at: { record: [number, number] };
 }
 
@@ -250,14 +251,31 @@ function around(home: [number, number], body: Held, parent: Held, most: number, 
 /** The station the market capture reads, as ESI numbers it; the run's own name for it is `jita-4-4`. */
 const MARKET_STATION = 60003760;
 
+/** A number a reader scans rather than computes: thousands grouped, and the unit ESI answered it in. */
+const grouped = (value: number) => value.toLocaleString('en-US');
+
 /** The place a system is: its star, its planets and their moons and belts, its gates and its stations. */
 function placeOf(system: System) {
   const id = slug(system.name);
   const stand = tiling.get(system.name);
   if (!stand) throw new Error(`${system.name} has no cell`);
-  const units: Record<string, Unit> = { [id]: { icon: 'system', label: system.name, at: { record: MIDDLE } } };
   const one = held.systems[String(system.id)];
   if (!one) throw new Error(`${system.name} is not in capture/units.json`);
+  const units: Record<string, Unit> = {
+    [id]: {
+      icon: 'system',
+      label: system.name,
+      // What the star is, in the source's own numbers: the run carries the temperature, and the panel carries the rest.
+      attributes: {
+        facts: [
+          { label: 'spectral', value: one.star.spectral },
+          { label: 'temperature', value: `${grouped(one.star.temperature)} K` },
+          { label: 'radius', value: `${grouped(one.star.radius)} m` },
+        ],
+      },
+      at: { record: MIDDLE },
+    },
+  };
 
   // A unit is named in the place by the word a reader already uses, so the id is the name's spelling and not an ESI
   // number: the panel and the board draw the id, and an id of eight digits is a row nobody can read.
@@ -280,7 +298,13 @@ function placeOf(system: System) {
     const here = at([planet.x, planet.z]);
     const key = keyOf(planet.name);
     home[key] = here;
-    units[key] = { icon: 'planet', label: planet.name, model: planet.typeName, at: { record: here } };
+    units[key] = {
+      icon: 'planet',
+      label: planet.name,
+      model: planet.typeName,
+      attributes: { facts: [{ label: 'type', value: planet.typeName }] },
+      at: { record: here },
+    };
     const mostMoon = Math.max(...planet.moons.map((moon) => Math.hypot(moon.x - planet.x, moon.z - planet.z)), 0);
     for (const moon of planet.moons) {
       units[keyOf(moon.name)] = { icon: 'moon', label: moon.name, at: { record: around(here, moon, planet, mostMoon, 5) } };
@@ -308,6 +332,15 @@ function placeOf(system: System) {
       icon: 'station',
       label: station.name,
       model: station.typeName,
+      // What can be done at the berth, which is the one thing ESI states about a station beyond its name.
+      attributes: {
+        facts: [
+          { label: 'type', value: station.typeName },
+          { label: 'services', value: station.services.join(', ') || 'none' },
+          { label: 'dockable', value: `${grouped(station.dockable)} m3` },
+          { label: 'reprocessing', value: `${Math.round(station.reprocessing * 100)}%` },
+        ],
+      },
       ...(key === 'jita-4-4' ? { abilities: ['order-read', 'order-fill'] } : {}),
       at: { record: home[key] },
     };
