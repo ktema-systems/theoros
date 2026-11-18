@@ -44,6 +44,10 @@ interface StarRecord {
   name: string;
   radius: number;
   spectral_class: string;
+  type_id: number;
+  age: number;
+  luminosity: number;
+  temperature: number;
 }
 
 interface Star {
@@ -51,6 +55,11 @@ interface Star {
   name: string;
   radius: number;
   spectral: string;
+  type: number;
+  typeName: string;
+  age: number;
+  luminosity: number;
+  temperature: number;
 }
 
 interface Moon {
@@ -71,6 +80,7 @@ interface Planet {
   id: number;
   name: string;
   type: number;
+  typeName: string;
   x: number;
   z: number;
   moons: Moon[];
@@ -89,6 +99,14 @@ interface Station {
   id: number;
   name: string;
   type: number;
+  typeName: string;
+  owner: number;
+  race: number;
+  services: string[];
+  dockable: number;
+  officeRent: number;
+  reprocessing: number;
+  stationsTake: number;
   x: number;
   z: number;
 }
@@ -115,6 +133,17 @@ async function get<T>(path: string): Promise<T> {
 
 const flat = (point: Point): [number, number] => [Math.round(point.x), Math.round(point.z)];
 
+// A type id is a number the panel cannot read, so the name ESI gives it is kept with it. The set of types a region
+// holds is small and repeats, so one read per type serves every unit that carries it.
+const typeNames = new Map<number, Promise<string>>();
+function typeName(id: number): Promise<string> {
+  const known = typeNames.get(id);
+  if (known) return known;
+  const read = get<{ name: string }>(`/universe/types/${id}/`).then((type) => type.name);
+  typeNames.set(id, read);
+  return read;
+}
+
 const detail = new Map<number, Units>();
 let done = 0;
 
@@ -137,7 +166,17 @@ for (const system of systems) {
     const record = await get<SystemRecord>(`/universe/systems/${system.id}/`);
     const star = await get<StarRecord>(`/universe/stars/${record.star_id}/`);
     const units: Units = {
-      star: { id: record.star_id, name: star.name, radius: star.radius, spectral: star.spectral_class },
+      star: {
+        id: record.star_id,
+        name: star.name,
+        radius: star.radius,
+        spectral: star.spectral_class,
+        type: star.type_id,
+        typeName: await typeName(star.type_id),
+        age: star.age,
+        luminosity: star.luminosity,
+        temperature: star.temperature,
+      },
       planets: [],
       gates: [],
       stations: [],
@@ -155,11 +194,35 @@ for (const system of systems) {
     }
     for (const station of record.stations ?? []) {
       tasks.push(async () => {
-        const one = await get<{ station_id: number; name: string; type_id: number; position: Point }>(
-          `/universe/stations/${station}/`,
-        );
+        const one = await get<{
+          station_id: number;
+          name: string;
+          type_id: number;
+          owner: number;
+          race_id: number;
+          services?: string[];
+          max_dockable_ship_volume: number;
+          office_rental_cost: number;
+          reprocessing_efficiency: number;
+          reprocessing_stations_take: number;
+          position: Point;
+        }>(`/universe/stations/${station}/`);
         const [x, z] = flat(one.position);
-        units.stations.push({ id: one.station_id, name: one.name, type: one.type_id, x, z });
+        units.stations.push({
+          id: one.station_id,
+          name: one.name,
+          type: one.type_id,
+          typeName: await typeName(one.type_id),
+          owner: one.owner,
+          race: one.race_id,
+          services: [...(one.services ?? [])].sort(),
+          dockable: one.max_dockable_ship_volume,
+          officeRent: one.office_rental_cost,
+          reprocessing: one.reprocessing_efficiency,
+          stationsTake: one.reprocessing_stations_take,
+          x,
+          z,
+        });
       });
     }
     for (const planet of record.planets ?? []) {
@@ -168,7 +231,16 @@ for (const system of systems) {
           `/universe/planets/${planet.planet_id}/`,
         );
         const [x, z] = flat(one.position);
-        const made: Planet = { id: one.planet_id, name: one.name, type: one.type_id, x, z, moons: [], belts: [] };
+        const made: Planet = {
+          id: one.planet_id,
+          name: one.name,
+          type: one.type_id,
+          typeName: await typeName(one.type_id),
+          x,
+          z,
+          moons: [],
+          belts: [],
+        };
         units.planets.push(made);
         for (const moon of planet.moons ?? []) {
           tasks.push(async () => {
@@ -197,7 +269,7 @@ const revision = `server-${status.server_version}/${status.start_time.slice(0, 1
 // The record is written in the order the region holds it, and every list inside it by id, so a second run over the same
 // source is the same file and a diff is a change at the source rather than in this script.
 const document = {
-  pin: { source: 'esi', endpoint: BASE, revision, adapter: 'eve/units/1' },
+  pin: { source: 'esi', endpoint: BASE, revision, adapter: 'eve/units/2' },
   systems: Object.fromEntries(
     systems.map((system) => {
       const units = detail.get(system.id);

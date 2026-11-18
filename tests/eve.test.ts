@@ -52,6 +52,19 @@ interface Unit {
 
 const systems = JSON.parse(readFileSync(`${ROOT}capture/systems.json`, 'utf8')) as System[];
 
+/** What each system holds, so a run's counts are the capture's own and not a number written twice. */
+const held = (
+  JSON.parse(readFileSync(`${ROOT}capture/units.json`, 'utf8')) as {
+    systems: Record<
+      string,
+      {
+        star: { temperature: number };
+        planets: { moons: unknown[]; belts: unknown[] }[];
+      }
+    >;
+  }
+).systems;
+
 /** The kills the fleet is read from, and the names ESI answers for every id they carry. */
 const FLEET = JSON.parse(readFileSync(`${ROOT}capture/fleet.json`, 'utf8')) as {
   kills: { attackers: { character_id?: number; ship_type_id: number; damage_done: number }[] }[];
@@ -153,6 +166,26 @@ test('a system measures its own security, gates and stations', () => {
     expect(measured('security')?.value, `${system.name} security`).toBe(system.sec);
     expect(measured('gates')?.value, `${system.name} gates`).toBe(system.gates);
     expect(measured('stations')?.value, `${system.name} stations`).toBe(system.stations);
+  }
+});
+
+test('a system measures what it holds below the gates and stations', () => {
+  for (const system of systems) {
+    // Jita's run is the market's, so the system's own counts are not on it.
+    if (slug(system.name) === 'jita') continue;
+    const one = held[String(system.id)];
+    expect(one, `${system.name} is not in capture/units.json`).toBeDefined();
+    const parsed = parseScenario(runOf(slug(system.name)));
+    const measured = (name: string) =>
+      parsed.records.find((record) => record.label === name)?.measure;
+    expect(measured('planets')?.value, `${system.name} planets`).toBe(one.planets.length);
+    expect(measured('moons')?.value, `${system.name} moons`).toBe(
+      one.planets.reduce((count, planet) => count + planet.moons.length, 0),
+    );
+    expect(measured('belts')?.value, `${system.name} belts`).toBe(
+      one.planets.reduce((count, planet) => count + planet.belts.length, 0),
+    );
+    expect(measured('star-temperature')?.value, `${system.name} star`).toBe(one.star.temperature);
   }
 });
 

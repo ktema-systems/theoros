@@ -10,10 +10,26 @@ own source is `src/`, the generator is `tools/systems.ts`, and the folders it wr
 and galactic coordinates ESI answers, read on 2026-11-15 at server 3698585.
 
 `capture/units.json` is what each system holds: the star, its planets with their moons and asteroid belts, and the gates
-and stations, every one of them with the name and the position in the system that ESI answers. It was read on 2026-11-17
-at server 3707965 and is pinned by that server. `npm run capture` reads it again. The file is committed because it is the
+and stations, every one of them with the name and the position in the system that ESI answers. It was read on 2026-11-18
+at server 3714173 and is pinned by that server. `npm run capture` reads it again. The file is committed because it is the
 source the board draws; a second read is a second capture rather than a build step, and the position of a moon is not
 something this repository can derive.
+
+Each unit carries the fields its endpoint answers, rather than the few the board first had reason to draw:
+
+| Unit | What it carries |
+|---|---|
+| star | name, radius, spectral class, type and type name, age, luminosity, temperature |
+| planet | name, type and type name, position, and the moons and belts that orbit it |
+| moon | name, position |
+| asteroid belt | name, position |
+| stargate | name, the system it leads to, position |
+| station | name, type and type name, owner, race, services, maximum dockable volume, office rental, reprocessing efficiency, and the station's cut |
+
+The shape stops where ESI's does, and that boundary is what the board draws. The source states no radius for a planet or a
+moon, no parent body for a station beyond the name it is given, and nothing at all below a moon or an asteroid belt. A
+region is therefore two levels deep: a system holds bodies, a body holds its moons and belts, and a berth is a point
+beside them rather than a place of its own.
 
 `capture/new-eden.json` is the market read: the source, the endpoint, the revision and the adapter version, then the
 scenes the run is made of. It was read from ESI on 2026-11-15 at server 3698585, and these are the reads it stands on:

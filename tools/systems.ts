@@ -72,6 +72,7 @@ interface Held {
 
 interface HeldPlanet extends Held {
   type: number;
+  typeName: string;
   moons: Held[];
   belts: Held[];
 }
@@ -82,10 +83,28 @@ interface HeldGate extends Held {
 
 interface HeldStation extends Held {
   type: number;
+  typeName: string;
+  owner: number;
+  race: number;
+  services: string[];
+  dockable: number;
+  officeRent: number;
+  reprocessing: number;
+  stationsTake: number;
 }
 
 interface HeldSystem {
-  star: { id: number; name: string; radius: number; spectral: string };
+  star: {
+    id: number;
+    name: string;
+    radius: number;
+    spectral: string;
+    type: number;
+    typeName: string;
+    age: number;
+    luminosity: number;
+    temperature: number;
+  };
   planets: HeldPlanet[];
   gates: HeldGate[];
   stations: HeldStation[];
@@ -333,6 +352,10 @@ function placeOf(system: System) {
 /** The run a system is, as the scenario language writes it. */
 function captureOf(system: System): Capture {
   const id = slug(system.name);
+  const one = held.systems[String(system.id)];
+  if (!one) throw new Error(`${system.name} is not in capture/units.json`);
+  const moons = one.planets.reduce((count, planet) => count + planet.moons.length, 0);
+  const belts = one.planets.reduce((count, planet) => count + planet.belts.length, 0);
   const scene: Scene = {
     at: 0,
     note: `00:00 ${system.name} is read.`,
@@ -340,6 +363,11 @@ function captureOf(system: System): Capture {
       { verb: 'measured', args: ['security', String(system.sec), 'rating', `${id}/system`] },
       { verb: 'measured', args: ['gates', String(system.gates), 'gates', `${id}/system`] },
       { verb: 'measured', args: ['stations', String(system.stations), 'stations', `${id}/system`] },
+      // What the source holds below the gates and stations, so a system's run is the whole of what ESI answers for it.
+      { verb: 'measured', args: ['planets', String(one.planets.length), 'planets', `${id}/system`] },
+      { verb: 'measured', args: ['moons', String(moons), 'moons', `${id}/system`] },
+      { verb: 'measured', args: ['belts', String(belts), 'belts', `${id}/system`] },
+      { verb: 'measured', args: ['star-temperature', String(one.star.temperature), 'K', `${id}/star`] },
     ],
   };
   const scenes: Scene[] = [scene];
