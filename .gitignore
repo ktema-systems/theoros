@@ -3,6 +3,10 @@ dist/
 *.tsbuildinfo
 .vite/
 
+# The frame is fetched by tools/frame.mjs; the stamp records the commit its packages were installed from.
+skene/
+.skene-frame
+
 # Generated from capture/ by `npm run generate`; the dev, build and test scripts run it first.
 projects/
 projects.json

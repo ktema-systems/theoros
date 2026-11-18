@@ -2,9 +2,9 @@
 #
 # One command for the whole app.
 #
-# The frame is a submodule, the projects are generated from capture/, and the dev server's cache outlives the packages it
-# was made from. A run does all three and then takes the port over: an old run answering there is stopped, because the app
-# on the port is the one this tree builds and not the one before it.
+# The frame is fetched at the commit skene's main is on, the projects are generated from capture/, and the dev server's
+# cache outlives the packages it was made from. A run does all three and then takes the port over: an old run answering
+# there is stopped, because the app on the port is the one this tree builds and not the one before it.
 
 set -eu
 
@@ -65,15 +65,20 @@ stop() {
   [ -z "$(holders "$1")" ] || { printf 'run.sh: port %s is still held\n' "$1" >&2; exit 1; }
 }
 
-submodule() {
-  if git submodule status --recursive 2>/dev/null | grep -qE '^[-+]'; then
-    printf 'theoros: taking the frame submodule\n' >&2
-    git submodule update --init --recursive
-  fi
+frame() {
+  printf 'theoros: taking the frame\n' >&2
+  npm run --silent frame >&2 || {
+    printf 'the frame could not be fetched: skene is read from the network on every run\n' >&2
+    exit 1
+  }
 }
 
+# The frame's packages are copied into the tree, so an install made against another commit is stale. The stamp moves
+# only when the frame does, which is what the packages have to be reinstalled for.
 packages() {
-  if [ ! -d node_modules ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
+  if [ ! -d node_modules ] ||
+    [ package-lock.json -nt node_modules/.package-lock.json ] ||
+    [ .skene-frame -nt node_modules/.package-lock.json ]; then
     printf 'theoros: installing packages\n' >&2
     npm ci
   fi
@@ -84,7 +89,7 @@ capture() {
   npm run capture
 }
 
-submodule
+frame
 packages
 
 if [ "$CAPTURE" = 1 ]; then capture; fi

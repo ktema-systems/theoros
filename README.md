@@ -8,19 +8,19 @@ there (a fleet in Akkio, the market's station in Jita). Its run carries what ESI
 and stations. The frame's minimap is the travel between systems, because every other system is another project on the
 same shell.
 
-Built on [skene](https://github.com/ssccsorg/skene), which is a submodule pinned by commit.
+Built on [skene](https://github.com/ssccsorg/skene), fetched at the commit its `main` is on.
 
 ## Running it
 
 ```bash
-git clone --recurse-submodules https://github.com/ktema-systems/theoros.git
+git clone https://github.com/ktema-systems/theoros.git
 cd theoros
 ./run.sh
 ```
 
-`./run.sh` takes the frame submodule when it is not there, installs the packages when the lock has moved, generates the
-projects, clears the dev cache, stops whatever holds the port and serves the app at http://localhost:5274/. An existing
-clone needs no setup; a run brings it up to date.
+`./run.sh` fetches the frame, installs the packages when the lock or the frame has moved, generates the projects, clears
+the dev cache, stops whatever holds the port and serves the app at http://localhost:5274/. An existing clone needs no
+setup; a run brings it up to date.
 
 The modes are `--check` (typecheck, tests and a build), `--build`, `--preview` (a build served at 5277), `--capture`
 (read the systems and their units from ESI before the mode runs), `--stop`, `--port N` and `--host`.
@@ -49,7 +49,7 @@ src/         the sphere this app draws beside the shell, its camera, its hulls a
 tools/       capture.ts reads the units; systems.ts writes a project a system; cells.ts divides the shell
              into the systems' cells; board.mjs assembles projects.json
 projects/    generated: ninety folders, one a system, from capture/
-skene/       the frame, pinned as a submodule
+skene/       the frame, fetched at skene's main by tools/frame.mjs on every install
 ```
 
 ## Licence
