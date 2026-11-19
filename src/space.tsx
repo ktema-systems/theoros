@@ -274,6 +274,7 @@ interface RegionMark {
 }
 
 function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | null }) {
+  const yaw = useView((state) => state.yaw);
   const turn = useView((state) => state.turn);
   const face = useView((state) => state.face);
   const disc = useRef<SVGSVGElement>(null);
@@ -312,7 +313,14 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
 
   // The star is the place's own unit, which is the project's; every other body keeps the distance the place gives it.
   const centre = marks.find((mark) => mark.id === current)?.at ?? ([0, 0, 0] as [number, number, number]);
-  const placed = marks.map((mark) => ({ mark, x: mark.at[0] - centre[0], y: -(mark.at[2] - centre[2]) }));
+  // The map is read from the pilot's side, so a hand that turns the view turns the ground under it.
+  const cos = Math.cos(yaw);
+  const sin = Math.sin(yaw);
+  const placed = marks.map((mark) => {
+    const x = mark.at[0] - centre[0];
+    const z = -(mark.at[2] - centre[2]);
+    return { mark, x: x * cos - z * sin, y: x * sin + z * cos };
+  });
   const radius = Math.max(0.001, ...placed.map((point) => Math.hypot(point.x, point.y)));
   const zoom = MINI / radius;
 
