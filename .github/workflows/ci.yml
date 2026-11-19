@@ -14,6 +14,8 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      # The frame is a file: dependency and is not committed, so it has to be on disk before npm resolves the tree.
+      - run: node tools/frame.mjs
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
