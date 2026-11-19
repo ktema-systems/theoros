@@ -10,6 +10,12 @@ other system is another project on the same shell.
 
 Built on [skene](https://github.com/ssccsorg/skene), fetched at the commit its `main` is on.
 
+## Status
+
+An experiment, not a product. It exists to show what a deployment of skene looks like over a real source, and it is
+published under Apache-2.0 so that anyone can take it apart, run it, or take the pictures it draws. Nothing here is
+sold, and the data stays a non-commercial demonstration; see [DATA.md](DATA.md).
+
 ## Running it
 
 ```bash
