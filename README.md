@@ -2,6 +2,8 @@
 
 θεωρός: the one sent to watch, and to bring back what was seen.
 
+[![Jita and its cell, drawn over a pinned snapshot of The Forge](docs/theoros.webp)](https://theoros-8rk.pages.dev/)
+
 A board of the EVE Online space, read from a pinned snapshot of ESI's public data. The board is The Forge as the source
 answered it: ninety star systems, and a project is one of them. A project's place is that system's own space, with its
 star at the middle and whatever stands there (a fleet in Akkio, the market's station in Jita). Its run carries what ESI
