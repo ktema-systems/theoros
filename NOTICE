@@ -1,10 +1,12 @@
 Theoros
 Licensed under the Apache License, Version 2.0. See LICENSE.
 
-The capture/ directory contains EVE Online data owned by CCP hf. That data is
-not licensed under the Apache License 2.0 and may be used only under the EVE
-Developer License, non-commercially and non-profit. See DATA.md.
+The capture/ directory contains EVE Online data owned by Fenris Creations,
+formerly CCP hf. That data is not licensed under the Apache License 2.0 and may
+be used only under the EVE Developer License, non-commercially and non-profit.
+See DATA.md.
 
-EVE Online data provided by CCP hf. Not affiliated with or endorsed by CCP.
-"EVE", "EVE Online", "CCP", and all related logos and images are trademarks or
-registered trademarks of CCP hf.
+EVE Online data provided by Fenris Creations, formerly CCP hf. Not affiliated
+with or endorsed by Fenris Creations. "EVE", "EVE Online", "CCP", and all
+related logos and images are trademarks or registered trademarks of Fenris
+Creations. © 2026 Fenris Creations. All rights reserved.

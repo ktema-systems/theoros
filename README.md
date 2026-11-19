@@ -64,10 +64,11 @@ skene/       the frame, fetched at skene's main by tools/frame.mjs on every inst
 
 Apache-2.0 for the code; see [LICENSE](LICENSE). The built bundle carries the skene packages, which are Apache-2.0 as well.
 
-The EVE Online data under `capture/` is CCP's and is not covered by that license. It is used non-commercially under the EVE Developer License. See [NOTICE](NOTICE).
+The EVE Online data under `capture/` is Fenris Creations' and is not covered by that license. It is used non-commercially under the EVE Developer License. See [NOTICE](NOTICE).
 
 ## The data
 
-EVE Online data provided by CCP hf. Not affiliated with or endorsed by CCP. "EVE", "EVE Online", "CCP", and all related
-logos and images are trademarks or registered trademarks of CCP hf. The captures are read over public endpoints only:
+EVE Online data provided by Fenris Creations, formerly CCP hf. Not affiliated with or endorsed by Fenris Creations.
+"EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered trademarks of Fenris
+Creations. © 2026 Fenris Creations. All rights reserved. The captures are read over public endpoints only:
 this board is non-commercial and authenticates nothing. See [DATA.md](DATA.md).

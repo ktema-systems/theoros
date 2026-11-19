@@ -53,7 +53,7 @@ export const brand: Brand = {
     'The board is The Forge: ninety systems with the coordinates, gates, stations and security ESI answers for them, and a project is one of them.',
     'The fleet is a real one: eleven pilots of New Eden Light Point College, in Fraternity., and the two hulls of GABELLA CORP they killed in Akkio, read from two ESI killmails.',
     'The market numbers are ESI too. The question, the finding and who took the work are this board reading them.',
-    'Skene draws it. The space is New Eden in EVE Online, read from ESI. EVE and EVE Online are trademarks of CCP hf. Theoros is not affiliated with or endorsed by CCP.',
+    'Skene draws it. The space is New Eden in EVE Online, read from ESI. EVE and EVE Online are trademarks of Fenris Creations. Theoros is not affiliated with or endorsed by Fenris Creations.',
     'Background: ESO/S. Brunier, CC BY 4.0.',
   ],
   Mark,

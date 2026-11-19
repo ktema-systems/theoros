@@ -122,20 +122,21 @@ behind the place so the place's marks are read in front of it. One system is alw
 
 ## Attribution
 
-The committed capture is a real ESI read, so it carries CCP data and the notice applies. The demonstration card carries
+The committed capture is a real ESI read, so it carries Fenris Creations data and the notice applies. The demonstration card carries
 it, and a deployment that draws this space without that card must carry it somewhere it can be read:
 
 ```text
-EVE Online data provided by CCP hf. Not affiliated with or endorsed by CCP.
+EVE Online data provided by Fenris Creations, formerly CCP hf. Not affiliated with or endorsed by
+Fenris Creations.
 "EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered
-trademarks of CCP hf.
+trademarks of Fenris Creations. © 2026 Fenris Creations. All rights reserved.
 ```
 
-The capture is not covered by the repository's Apache-2.0 license. The code is; the data is CCP's, and the notice above
+The capture is not covered by the repository's Apache-2.0 license. The code is; the data is Fenris Creations', and the notice above
 travels with it. See [NOTICE](NOTICE) and [capture/README.md](capture/README.md).
 
 The capture is read over the public endpoints only. Two bounds follow and are not negotiable by this repository. A
 demonstration that carries real EVE data stays non-commercial, and it uses no ESI endpoint that needs a token, which is
 why nothing here is authenticated. Selling or publicly distributing a product over that data needs a commercial licence
-from CCP, which is a decision outside this repository. zKillboard's software is AGPLv3 and is not used here: its index
-named the two killmails, and both were read from ESI, so the committed data is CCP's under the same terms.
+from Fenris Creations, which is a decision outside this repository. zKillboard's software is AGPLv3 and is not used here: its index
+named the two killmails, and both were read from ESI, so the committed data is Fenris Creations' under the same terms.

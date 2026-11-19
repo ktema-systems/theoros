@@ -21,7 +21,7 @@ fit-outs at 312 to 344 triangles, a station is 376, a gate 508, with no texture,
 variant comes from its own name, so Retribution, Stiletto and Svipul are three shapes rather than one silhouette three
 times. Shading is baked into the vertex colours, because the scene carries no lights.
 
-That is a settled decision rather than a first attempt, for two reasons. CCP's terms do not allow an EVE
+That is a settled decision rather than a first attempt, for two reasons. The EVE Developer License does not allow an EVE
 model on a public page without written permission, so using one would make the demonstration's legal
 position worse than its data's. A CC0 model is safe, but importing one needs a loader and an asset
 pipeline this tree does not have, and decimating it needs a person with Blender in the loop every time
