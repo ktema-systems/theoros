@@ -5,17 +5,13 @@ import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Sun } from 'lucide-r
 import sky from '../assets/sky.jpg?url';
 import {
   LEVEL,
-  cellOfPlace,
+  bearingOf,
   dragTurn,
   fitView,
   forwardOf,
-  onDisc,
   onShell,
-  outlineOfCell,
   project,
   sectorOf,
-  viewRegion,
-  visible,
 } from '@ssccsorg/skene-board';
 import { registerReading, type Board } from '@ssccsorg/skene-frame/lib/readings';
 import { useScenario } from '@ssccsorg/skene-frame/stores/scenario';
@@ -256,70 +252,33 @@ function Mark({ system, picked, onPick }: { system: Marked; picked: boolean; onP
   );
 }
 
-/** The disc's own grid, at every thirty degrees. It is what makes the disc read as a sphere. */
-const WEB = [-60, -30, 0, 30, 60];
-/** The samples on one line of the web, enough that the curve the projection gives is the curve drawn. */
-const WEB_STEPS = 32;
-
-/** A parallel at one elevation, from the left rim to the right. */
-function parallelPath(elevation: number): string {
-  const points: string[] = [];
-  for (let step = 0; step <= WEB_STEPS; step += 1) {
-    const [x, y] = onDisc(-Math.PI / 2 + (step / WEB_STEPS) * Math.PI, elevation);
-    points.push(`${x.toFixed(4)} ${y.toFixed(4)}`);
-  }
-  return `M${points.join('L')}`;
-}
-
-/** A meridian at one azimuth, from the south pole to the north. */
-function meridianPath(azimuth: number): string {
-  const points: string[] = [];
-  for (let step = 0; step <= WEB_STEPS; step += 1) {
-    const [x, y] = onDisc(azimuth, -Math.PI / 2 + (step / WEB_STEPS) * Math.PI);
-    points.push(`${x.toFixed(4)} ${y.toFixed(4)}`);
-  }
-  return `M${points.join('L')}`;
-}
+/** The share of the disc's radius the units are fitted to, leaving the rim as the map's own edge. */
+const MINI = 0.82;
 
 /**
- * The region as a disc, small, at the pane's own corner.
+ * The space this pane draws, as a map at the pane's own corner.
  *
- * The frame's minimap answers which project the pilot is in; this one answers where in the region the pane is pointed, and
- * it is read the same way: the shell seen from outside the seat, turned to the pilot's bearing, with the part the pane
- * holds painted on it. A hand that pushes the disc turns the view, because the surface moves under the marker and not the
- * marker under the surface, and a press on a system turns the pane to face it. Two navigators because they are two
- * questions, and each belongs to the layer that can answer it.
+ * The frame's minimap answers which project the pilot is in; this one answers where a unit stands in the place's own
+ * space. It is read flat rather than through the camera, so the star sits at the middle and every body keeps the distance
+ * the place gives it. A system whose bodies crowd its star reads as a map here and not as a dot.
  *
- * The marks are the projects' own bearings, so the disc and the far stars the pane draws cannot disagree about where a
- * system is: both are read off the one sector the board holds. Only the half of the shell the pilot faces is drawn, which
- * is what makes the disc a sphere rather than a chart.
+ * A hand that pushes the disc turns the view, because the surface moves under the marker and not the marker under the
+ * surface, and a press on a unit turns the pane to face it. Two navigators because they are two questions, and each
+ * belongs to the layer that can answer it.
  */
 interface RegionMark {
   id: string;
   label: string;
-  /** Where the system stands on the shell, in radians. */
-  bearing: [number, number];
-  /** The cell the system holds, in radians, or nothing when the place declares none. */
-  cell: [number, number][] | null;
+  /** Where the unit stands in the place's own space. */
+  at: [number, number, number];
 }
 
 function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | null }) {
-  const yaw = useView((state) => state.yaw);
-  const pitch = useView((state) => state.pitch);
-  const fov = useView((state) => state.fov);
-  const frame = useView((state) => state.frame);
   const turn = useView((state) => state.turn);
   const face = useView((state) => state.face);
   const disc = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: number; at: [number, number] } | null>(null);
   const turned = useRef(false);
-  // The pilot's own bearing, which the disc is centred on: the map shows the half of the shell they face.
-  const bearing: [number, number] = [yaw, pitch];
-  // The pane's own corners, recomputed from the view rather than tracked beside it.
-  const view = useMemo(
-    () => viewRegion({ yaw, pitch, fov }, frame[0] / Math.max(frame[1], 1)),
-    [yaw, pitch, fov, frame],
-  );
 
   const down = (event: ReactPointerEvent<SVGSVGElement>) => {
     // The pane turns the view on its own drag, so a hand that took the disc has taken the map and not the space behind it.
@@ -351,6 +310,12 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
 
   if (!marks.length) return null;
 
+  // The star is the place's own unit, which is the project's; every other body keeps the distance the place gives it.
+  const centre = marks.find((mark) => mark.id === current)?.at ?? ([0, 0, 0] as [number, number, number]);
+  const placed = marks.map((mark) => ({ mark, x: mark.at[0] - centre[0], y: -(mark.at[2] - centre[2]) }));
+  const radius = Math.max(0.001, ...placed.map((point) => Math.hypot(point.x, point.y)));
+  const zoom = MINI / radius;
+
   return (
     <div
       className="pointer-events-auto absolute bottom-3 left-3 overflow-hidden rounded-full border border-border/70 bg-card/85 shadow-lg backdrop-blur-sm"
@@ -366,80 +331,42 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
         onPointerUp={up}
         onPointerCancel={up}
       >
-        <g className="fill-none stroke-border" strokeWidth={0.004}>
-          {WEB.map((degrees) => (
-            <path
-              key={`meridian-${degrees}`}
-              d={meridianPath((degrees * Math.PI) / 180)}
-              className={degrees === 0 ? 'stroke-muted-foreground/60' : undefined}
-            />
-          ))}
-          {WEB.map((degrees) => (
-            <path key={`parallel-${degrees}`} d={parallelPath((degrees * Math.PI) / 180)} />
-          ))}
-        </g>
+        <circle r="1" className="fill-background/40" />
+        <path d="M-1 0H1M0 -1V1" className="stroke-border/60" strokeWidth="0.004" />
 
-        {frame[0] > 0 && frame[1] > 0 ? (
-          <polygon
-            points={view.map(([x, y]) => `${x.toFixed(4)},${y.toFixed(4)}`).join(' ')}
-            className="fill-foreground/5 stroke-foreground/25"
-            strokeWidth={0.006}
-            pointerEvents="none"
-          />
-        ) : null}
-
-        {marks.map((mark) => {
-          const [azimuth, elevation] = mark.bearing;
-          // A cell is the ground the system holds: the disc draws the part of it in front of the pilot, and the
-          // clickable ground is the way to the system. A place without a cell is a mark and nothing more.
-          const ground = mark.cell ? outlineOfCell(mark.cell, bearing) : null;
-          const near = visible([azimuth, elevation], bearing);
-          if (!ground && !near) return null;
-          const [x, y] = onDisc(azimuth, elevation, bearing);
-          const here = mark.id === current;
-          return (
-            <g key={mark.id}>
-              {ground ? (
-                <path
-                  d={ground}
-                  className={cn(
-                    'cursor-pointer',
-                    here ? 'fill-foreground/10 stroke-foreground/40' : 'fill-foreground/[0.03] stroke-border hover:fill-foreground/10',
-                  )}
-                  strokeWidth={0.005}
-                  onClick={() => {
-                    if (turned.current) return;
-                    face(mark.bearing);
-                  }}
-                >
-                  <title>{mark.label}</title>
-                </path>
-              ) : null}
-              {near ? (
-                <>
-                  {here ? (
-                    <circle cx={x} cy={y} r={0.07} className="fill-none stroke-foreground/40" strokeWidth={0.01} />
-                  ) : null}
+        <g transform={`scale(${zoom})`}>
+          {placed.map(({ mark, x, y }) => {
+            const here = mark.id === current;
+            return (
+              <g key={mark.id}>
+                {here ? (
                   <circle
                     cx={x}
                     cy={y}
-                    r={here ? 0.05 : 0.028}
-                    className={cn(
-                      'cursor-pointer',
-                      here ? 'fill-foreground' : 'fill-muted-foreground/60 hover:fill-foreground',
-                    )}
-                    onClick={() => {
-                      if (turned.current) return;
-                      face(mark.bearing);
-                    }}
-                  >
-                    <title>{mark.label}</title>
-                  </circle>
-                </>
-              ) : null}
-            </g>
-          );
-        })}
+                    r={0.07 / zoom}
+                    className="fill-none stroke-foreground/40"
+                    strokeWidth={0.01 / zoom}
+                  />
+                ) : null}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={(here ? 0.05 : 0.026) / zoom}
+                  className={cn(
+                    'cursor-pointer',
+                    here ? 'fill-foreground' : 'fill-muted-foreground/60 hover:fill-foreground',
+                  )}
+                  onClick={() => {
+                    if (turned.current) return;
+                    face(bearingOf(mark.at));
+                  }}
+                >
+                  <title>{mark.label}</title>
+                </circle>
+              </g>
+            );
+          })}
+        </g>
 
         <circle r={0.03} className="fill-claim" />
       </svg>
@@ -749,15 +676,14 @@ function EveSpace({ world, pickedId, onPick }: Board) {
     return made;
   }, [projects, projectId]);
   useEffect(() => () => regionGeometry?.dispose(), [regionGeometry]);
-  // The disc's own marks: the projects, at the bearing each one declares.
+  // The disc's own marks: the units this pane draws, where the place puts them.
   const marks = useMemo<RegionMark[]>(() => {
-    return projects.map((entry) => ({
-      id: entry.id,
-      label: entry.title ?? entry.id,
-      bearing: sectorOf(entry.place),
-      cell: cellOfPlace(entry.place),
+    return systems.map((system) => ({
+      id: system.id,
+      label: system.label ?? system.id,
+      at: system.at,
     }));
-  }, [projects]);
+  }, [systems]);
   const routes = useMemo(
     () =>
       world
