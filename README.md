@@ -62,9 +62,12 @@ skene/       the frame, fetched at skene's main by tools/frame.mjs on every inst
 
 ## Licence
 
-Apache-2.0; see [LICENSE](LICENSE). The built bundle carries the skene packages, which are Apache-2.0 as well.
+Apache-2.0 for the code; see [LICENSE](LICENSE). The built bundle carries the skene packages, which are Apache-2.0 as well.
+
+The EVE Online data under `capture/` is CCP's and is not covered by that license. It is used non-commercially under the EVE Developer License. See [NOTICE](NOTICE).
 
 ## The data
 
-EVE Online data provided by CCP hf. via EVE Ref. Not affiliated with or endorsed by CCP. The captures are read over public
-endpoints only: this board is non-commercial and authenticates nothing. See [DATA.md](DATA.md).
+EVE Online data provided by CCP hf. Not affiliated with or endorsed by CCP. "EVE", "EVE Online", "CCP", and all related
+logos and images are trademarks or registered trademarks of CCP hf. The captures are read over public endpoints only:
+this board is non-commercial and authenticates nothing. See [DATA.md](DATA.md).

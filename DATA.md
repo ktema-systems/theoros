@@ -126,8 +126,13 @@ The committed capture is a real ESI read, so it carries CCP data and the notice 
 it, and a deployment that draws this space without that card must carry it somewhere it can be read:
 
 ```text
-EVE Online data provided by CCP hf. via EVE Ref. Not affiliated with or endorsed by CCP.
+EVE Online data provided by CCP hf. Not affiliated with or endorsed by CCP.
+"EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered
+trademarks of CCP hf.
 ```
+
+The capture is not covered by the repository's Apache-2.0 license. The code is; the data is CCP's, and the notice above
+travels with it. See [NOTICE](NOTICE) and [capture/README.md](capture/README.md).
 
 The capture is read over the public endpoints only. Two bounds follow and are not negotiable by this repository. A
 demonstration that carries real EVE data stays non-commercial, and it uses no ESI endpoint that needs a token, which is
