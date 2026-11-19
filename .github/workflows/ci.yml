@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       # The frame is a file: dependency and is not committed, so it has to be on disk before npm resolves the tree.
       - run: node tools/frame.mjs
