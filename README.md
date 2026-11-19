@@ -21,7 +21,7 @@ sold, and the data stays a non-commercial demonstration; see [DATA.md](DATA.md).
 ## Running it
 
 ```bash
-git clone https://github.com/ktema-systems/theoros.git
+git clone https://github.com/metasmile/theoros.git
 cd theoros
 ./run.sh
 ```
