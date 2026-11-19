@@ -2,11 +2,11 @@
 
 θεωρός: the one sent to watch, and to bring back what was seen.
 
-A board of the EVE Online space, read from ESI. The board is The Forge as the source answers it: ninety star systems, and
-a project is one of them. A project's place is that system's own space, with its star at the middle and whatever stands
-there (a fleet in Akkio, the market's station in Jita). Its run carries what ESI answers for the system: security, gates
-and stations. The frame's minimap is the travel between systems, because every other system is another project on the
-same shell.
+A board of the EVE Online space, read from a pinned snapshot of ESI's public data. The board is The Forge as the source
+answered it: ninety star systems, and a project is one of them. A project's place is that system's own space, with its
+star at the middle and whatever stands there (a fleet in Akkio, the market's station in Jita). Its run carries what ESI
+answers for the system: security, gates and stations. The frame's minimap is the travel between systems, because every
+other system is another project on the same shell.
 
 Built on [skene](https://github.com/ssccsorg/skene), fetched at the commit its `main` is on.
 
