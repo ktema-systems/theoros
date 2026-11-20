@@ -1,13 +1,10 @@
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Sun } from 'lucide-react';
 import sky from '../assets/sky.jpg?url';
 import {
-  GRATICULE,
   LEVEL,
-  bearingOf,
-  dragTurn,
   fitView,
   forwardOf,
   onShell,
@@ -15,6 +12,7 @@ import {
   sectorOf,
 } from '@ssccsorg/skene-board';
 import { registerReading, type Board } from '@ssccsorg/skene-frame/lib/readings';
+import { SphereMinimap, type SphereMark } from '@ssccsorg/skene-frame/components/SphereMinimap';
 import { useScenario } from '@ssccsorg/skene-frame/stores/scenario';
 import { cn } from '@ssccsorg/skene-ui';
 import { haulerVariant, markGeometry } from './hulls';
@@ -253,191 +251,6 @@ function Mark({ system, picked, onPick }: { system: Marked; picked: boolean; onP
   );
 }
 
-/** The disc's own side, in the units its marks are placed in: the pane's picture, drawn small. */
-const MINI = 2.02;
-
-/** How many steps a cage line is drawn with: enough that a curve on this disc reads as one. */
-const MINI_STEPS = 32;
-
-/** A direction on the sphere the pane stands in, as a point on the unit sphere. */
-function onSphere(azimuth: number, elevation: number): [number, number, number] {
-  const flat = Math.cos(elevation);
-  return [flat * Math.sin(azimuth), Math.sin(elevation), -flat * Math.cos(azimuth)];
-}
-
-/**
- * The space this pane draws, as a disc at the pane's own corner.
- *
- * The frame's minimap answers which project the pilot is in; this one is the pane's own space, and what it holds is the
- * pane's field itself: the rectangle the pane looks through, drawn as large as the disc will take it and always the same
- * size, with the sphere's cage turning under the units inside it. A turn moves the units and leaves the frame where it
- * is, which is the difference between the map turning and the pilot turning.
- *
- * A hand that pushes the disc turns the view, because the surface moves under the marker and not the marker under the
- * surface, and a press on a unit turns the pane to face it. Two navigators because they are two questions, and each
- * belongs to the layer that can answer it.
- */
-interface RegionMark {
-  id: string;
-  label: string;
-  /** Where the unit stands in the pane's own space. */
-  at: [number, number, number];
-}
-
-function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | null }) {
-  const yaw = useView((state) => state.yaw);
-  const pitch = useView((state) => state.pitch);
-  const fov = useView((state) => state.fov);
-  const frame = useView((state) => state.frame);
-  const turn = useView((state) => state.turn);
-  const face = useView((state) => state.face);
-  const disc = useRef<SVGSVGElement>(null);
-  const drag = useRef<{ id: number; at: [number, number] } | null>(null);
-  const turned = useRef(false);
-  // The pane's field and shape as the rectangle it looks through. The disc's own field is whatever puts that rectangle's
-  // corners on its rim, so the frame is as large as the disc holds, keeps the pane's proportions, and never changes size.
-  const aspect = frame[0] / Math.max(frame[1], 1);
-  const corner = Math.hypot(1, aspect);
-  const span = (2 * Math.atan(Math.tan((fov * Math.PI) / 360) * corner) * 180) / Math.PI;
-  const field = [aspect / corner, 1 / corner] as const;
-
-  // The sphere's own cage, through the disc's camera: what makes the disc a place being turned rather than a plan being
-  // looked at. A line that runs behind the camera is broken there instead of joined across it.
-  const cage = useMemo(() => {
-    const view = { yaw, pitch, fov: span };
-    const half = MINI / 2;
-    const lines: string[] = [];
-    const trace = (at: (t: number) => [number, number, number]) => {
-      let run: string[] = [];
-      const flush = () => {
-        if (run.length > 1) lines.push(run.join(' '));
-        run = [];
-      };
-      for (let step = 0; step <= MINI_STEPS; step += 1) {
-        const [px, py, depth] = project(at(step / MINI_STEPS), MINI, MINI, view);
-        if (depth <= 0) {
-          flush();
-          continue;
-        }
-        run.push(`${run.length ? 'L' : 'M'}${(px - half).toFixed(3)} ${(py - half).toFixed(3)}`);
-      }
-      flush();
-    };
-    for (let ring = -2; ring <= 2; ring += 1) {
-      const elevation = ring * GRATICULE;
-      trace((t) => onSphere(t * Math.PI * 2, elevation));
-    }
-    for (let index = 0; index < 12; index += 1) {
-      const azimuth = (index / 12) * Math.PI * 2;
-      trace((t) => onSphere(azimuth, (t - 0.5) * Math.PI));
-    }
-    return lines;
-  }, [yaw, pitch, span]);
-
-  const down = (event: ReactPointerEvent<SVGSVGElement>) => {
-    // The pane turns the view on its own drag, so a hand that took the disc has taken the map and not the space behind it.
-    event.stopPropagation();
-    drag.current = { id: event.pointerId, at: [event.clientX, event.clientY] };
-    turned.current = false;
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-  const move = (event: ReactPointerEvent<SVGSVGElement>) => {
-    event.stopPropagation();
-    const from = drag.current;
-    if (!from || from.id !== event.pointerId) return;
-    const [dx, dy] = [event.clientX - from.at[0], event.clientY - from.at[1]];
-    if (!turned.current && Math.hypot(dx, dy) < DRAG) return;
-    turned.current = true;
-    drag.current = { id: from.id, at: [event.clientX, event.clientY] };
-    if (!dx && !dy) return;
-    // The sphere is drawn from outside the seat, so a hand that pushes its surface turns the space the other way.
-    const step = dragTurn(dx, dy, disc.current?.getBoundingClientRect() ?? null);
-    turn(-step.dx, -step.dy, step.per);
-  };
-  const up = (event: ReactPointerEvent<SVGSVGElement>) => {
-    event.stopPropagation();
-    drag.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  };
-
-  if (!marks.length) return null;
-
-  return (
-    <div
-      className="pointer-events-auto absolute bottom-3 left-3 overflow-hidden rounded-full border border-border/70 bg-card/85 shadow-lg backdrop-blur-sm"
-      style={{ width: 160, height: 160 }}
-    >
-      <svg
-        ref={disc}
-        data-region="region-map"
-        viewBox="-1.01 -1.01 2.02 2.02"
-        preserveAspectRatio="xMidYMid meet"
-        className="size-full cursor-move touch-none"
-        onPointerDown={down}
-        onPointerMove={move}
-        onPointerUp={up}
-        onPointerCancel={up}
-      >
-        <circle r="1" className="fill-background/40" />
-        {cage.map((line, index) => (
-          <path
-            key={index}
-            d={line}
-            className="fill-none stroke-foreground/15"
-            strokeWidth={0.004}
-            pointerEvents="none"
-          />
-        ))}
-        <path d="M-1 0H1M0 -1V1" className="stroke-border/60" strokeWidth={0.004} />
-
-        {/* The pane's field, as large as the disc holds it. */}
-        <rect
-          x={-field[0]}
-          y={-field[1]}
-          width={field[0] * 2}
-          height={field[1] * 2}
-          className="fill-foreground/5 stroke-foreground/40"
-          strokeWidth={0.006}
-          pointerEvents="none"
-        />
-
-        {marks.map((mark) => {
-          const [px, py, depth] = project(mark.at, MINI, MINI, { yaw, pitch, fov: span });
-          if (depth <= 0) return null;
-          const [x, y] = [px - MINI / 2, py - MINI / 2];
-          const here = mark.id === current;
-          return (
-            <g key={mark.id}>
-              {here ? (
-                <circle cx={x} cy={y} r={0.07} className="fill-none stroke-foreground/40" strokeWidth={0.01} />
-              ) : null}
-              <circle
-                cx={x}
-                cy={y}
-                r={here ? 0.05 : 0.028}
-                className={cn(
-                  'cursor-pointer',
-                  here ? 'fill-foreground' : 'fill-muted-foreground/60 hover:fill-foreground',
-                )}
-                onClick={() => {
-                  if (turned.current) return;
-                  face(bearingOf(mark.at));
-                }}
-              >
-                <title>{mark.label}</title>
-              </circle>
-            </g>
-          );
-        })}
-
-        <circle r={0.03} className="fill-claim" />
-      </svg>
-    </div>
-  );
-}
-
 /**
  * The system the pilot is in, drawn as what it is.
  *
@@ -627,6 +440,10 @@ function EveSpace({ world, pickedId, onPick }: Board) {
   const held = useView((state) => state.held);
   const frame = useView((state) => state.frame);
   const setFrame = useView((state) => state.setFrame);
+  const yaw = useView((state) => state.yaw);
+  const pitch = useView((state) => state.pitch);
+  const fov = useView((state) => state.fov);
+  const face = useView((state) => state.face);
   const projectId = useScenario((state) => state.projectId);
   const projects = useScenario((state) => state.projects);
 
@@ -741,7 +558,7 @@ function EveSpace({ world, pickedId, onPick }: Board) {
   }, [projects, projectId]);
   useEffect(() => () => regionGeometry?.dispose(), [regionGeometry]);
   // The disc's own marks: the units this pane draws, where the place puts them.
-  const marks = useMemo<RegionMark[]>(() => {
+  const marks = useMemo<SphereMark[]>(() => {
     return systems.map((system) => ({
       id: system.id,
       label: system.label ?? system.id,
@@ -899,7 +716,13 @@ function EveSpace({ world, pickedId, onPick }: Board) {
           </button>
         ))}
       </div>
-      <RegionMap marks={marks} current={projectId} />
+      <SphereMinimap
+        view={{ yaw, pitch, fov, frame }}
+        marks={marks}
+        current={projectId}
+        onTurn={turn}
+        onFace={face}
+      />
     </div>
   );
 }
