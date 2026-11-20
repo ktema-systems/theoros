@@ -49,6 +49,11 @@ it first, so a fresh clone needs nothing else. Neither `projects/` nor `projects
 generated from the pinned captures. The data, the endpoints and their pins are in [DATA.md](DATA.md). A hull's contract
 is in [MESH.md](MESH.md).
 
+Publishing is a push to `main`: the run checks the tree and then uploads the build it checked. `./deploy.sh` publishes
+from this machine instead, for a run that cannot be waited on. It builds, reads the version out of the bundle, and stops
+unless that version names the commit being published, so the site cannot be served from a build of some other commit.
+`npm run deploy` is that script, and `--dry-run` takes it as far as the check.
+
 ## The tree
 
 ```
