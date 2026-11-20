@@ -258,19 +258,20 @@ const MINI = 2.02;
 /**
  * How much of the sphere the disc holds, in degrees.
  *
- * Fixed rather than tied to the pane's own field: the box drawn inside the disc is the pane's field, so a disc that
- * widened with the pane would keep the box the same size and say nothing about how much of the sphere was in frame.
+ * Fixed, and narrow enough that the units standing in the space are told apart rather than met. The frame is wider than
+ * this at most zooms, so the disc is a window on the space and not a picture of the frame, and the frame is drawn where
+ * it falls inside it.
  */
-const MINI_SPAN = 120;
+const MINI_SPAN = 36;
 
 /**
  * The space this pane draws, as a disc at the pane's own corner.
  *
- * The frame's minimap answers which project the pilot is in; this one is the pane's own view of the sphere, drawn in a
- * corner at a fixed width. The marks are the units this pane draws, taken through the same projection the pane looks
- * through, so a turn carries them across the disc as it carries the bodies across the pane. What the pane's own field
- * holds is the box drawn inside the disc, so a zoom narrows the box instead of redrawing the sphere: the disc answers
- * how much of the sphere stands around the frame, and the box answers which part of it is in frame.
+ * The frame's minimap answers which project the pilot is in; this one is the pane's own space, drawn in a corner: the
+ * units as a field of marks at a window narrow enough to tell them apart, and the pane's field as a box over them. The
+ * two are one projection at one scale, so a mark inside the box is a unit in frame and a mark outside it is one a turn
+ * would bring in. Where the frame is wider than the window the box reaches past the rim, and the rim says so rather than
+ * pretending the frame has shrunk to the disc it no longer fits.
  *
  * A hand that pushes the disc turns the view, because the surface moves under the marker and not the marker under the
  * surface, and a press on a unit turns the pane to face it. Two navigators because they are two questions, and each
@@ -293,12 +294,14 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
   const disc = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: number; at: [number, number] } | null>(null);
   const turned = useRef(false);
-  // The pane's own field as a box inside the disc. Both are in degrees, which is what `project` and the view store use.
+  // The pane's own field as a box on the disc. Both are in degrees, which is what `project` and the view store use.
   const half = Math.min(1, Math.tan((fov * Math.PI) / 360) / Math.tan((MINI_SPAN * Math.PI) / 360));
   const field = [
     Math.min(1, half * (frame[0] / Math.max(frame[1], 1))),
     half,
   ] as const;
+  // A box whose corners are outside the disc is four lines at the rim, which says less than the rim does on its own.
+  const boxed = Math.hypot(field[0], field[1]) <= 1;
 
   const down = (event: ReactPointerEvent<SVGSVGElement>) => {
     // The pane turns the view on its own drag, so a hand that took the disc has taken the map and not the space behind it.
@@ -349,15 +352,21 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
         <circle r="1" className="fill-background/40" />
         <path d="M-1 0H1M0 -1V1" className="stroke-border/60" strokeWidth="0.004" />
 
-        <rect
-          x={-field[0]}
-          y={-field[1]}
-          width={field[0] * 2}
-          height={field[1] * 2}
-          className="fill-foreground/5 stroke-foreground/40"
-          strokeWidth={0.006}
-          pointerEvents="none"
-        />
+        {/* The frame's own field, when it fits on the disc. When it does not, everything here is in frame and the rim says
+            so, which is the same fact the box would carry with its corners off the edge. */}
+        {boxed ? (
+          <rect
+            x={-field[0]}
+            y={-field[1]}
+            width={field[0] * 2}
+            height={field[1] * 2}
+            className="fill-foreground/5 stroke-foreground/40"
+            strokeWidth={0.006}
+            pointerEvents="none"
+          />
+        ) : (
+          <circle r="0.99" className="fill-none stroke-foreground/40" strokeWidth={0.006} pointerEvents="none" />
+        )}
 
         {marks.map((mark) => {
           const [px, py, depth] = project(mark.at, MINI, MINI, { yaw, pitch, fov: MINI_SPAN });
