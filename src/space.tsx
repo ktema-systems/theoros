@@ -266,21 +266,12 @@ function onSphere(azimuth: number, elevation: number): [number, number, number] 
 }
 
 /**
- * How much of the sphere the disc holds, in degrees.
- *
- * Wide enough that a turn carries the units across the disc rather than out of it: at a narrow window one drag emptied
- * the map, which is no use on a thing whose whole point is being turned. The frame is drawn where it falls, as a box
- * while it fits and as the rim when it does not.
- */
-const MINI_SPAN = 140;
-
-/**
  * The space this pane draws, as a disc at the pane's own corner.
  *
- * The frame's minimap answers which project the pilot is in; this one is the pane's own space, drawn in a corner, and
- * two things stand on it through one camera: the sphere's own cage, which is what makes the disc a place being turned
- * rather than a plan being read, and the units. The pane's field is a box over them while it fits and the rim when it
- * does not, so a mark inside it is a unit in frame and a mark outside it is one a turn would bring in.
+ * The frame's minimap answers which project the pilot is in; this one is the pane's own space, and what it holds is the
+ * pane's field itself: the rectangle the pane looks through, drawn as large as the disc will take it and always the same
+ * size, with the sphere's cage turning under the units inside it. A turn moves the units and leaves the frame where it
+ * is, which is the difference between the map turning and the pilot turning.
  *
  * A hand that pushes the disc turns the view, because the surface moves under the marker and not the marker under the
  * surface, and a press on a unit turns the pane to face it. Two navigators because they are two questions, and each
@@ -303,19 +294,17 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
   const disc = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: number; at: [number, number] } | null>(null);
   const turned = useRef(false);
-  // The pane's own field as a box on the disc. Both are in degrees, which is what `project` and the view store use.
-  const half = Math.min(1, Math.tan((fov * Math.PI) / 360) / Math.tan((MINI_SPAN * Math.PI) / 360));
-  const field = [
-    Math.min(1, half * (frame[0] / Math.max(frame[1], 1))),
-    half,
-  ] as const;
-  // A box whose corners are outside the disc is four lines at the rim, which says less than the rim does on its own.
-  const boxed = Math.hypot(field[0], field[1]) <= 1;
+  // The pane's field and shape as the rectangle it looks through. The disc's own field is whatever puts that rectangle's
+  // corners on its rim, so the frame is as large as the disc holds, keeps the pane's proportions, and never changes size.
+  const aspect = frame[0] / Math.max(frame[1], 1);
+  const corner = Math.hypot(1, aspect);
+  const span = (2 * Math.atan(Math.tan((fov * Math.PI) / 360) * corner) * 180) / Math.PI;
+  const field = [aspect / corner, 1 / corner] as const;
 
   // The sphere's own cage, through the disc's camera: what makes the disc a place being turned rather than a plan being
   // looked at. A line that runs behind the camera is broken there instead of joined across it.
   const cage = useMemo(() => {
-    const view = { yaw, pitch, fov: MINI_SPAN };
+    const view = { yaw, pitch, fov: span };
     const half = MINI / 2;
     const lines: string[] = [];
     const trace = (at: (t: number) => [number, number, number]) => {
@@ -343,7 +332,7 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
       trace((t) => onSphere(azimuth, (t - 0.5) * Math.PI));
     }
     return lines;
-  }, [yaw, pitch]);
+  }, [yaw, pitch, span]);
 
   const down = (event: ReactPointerEvent<SVGSVGElement>) => {
     // The pane turns the view on its own drag, so a hand that took the disc has taken the map and not the space behind it.
@@ -403,24 +392,19 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
         ))}
         <path d="M-1 0H1M0 -1V1" className="stroke-border/60" strokeWidth={0.004} />
 
-        {/* The frame's own field, when it fits on the disc. When it does not, everything here is in frame and the rim says
-            so, which is the same fact the box would carry with its corners off the edge. */}
-        {boxed ? (
-          <rect
-            x={-field[0]}
-            y={-field[1]}
-            width={field[0] * 2}
-            height={field[1] * 2}
-            className="fill-foreground/5 stroke-foreground/40"
-            strokeWidth={0.006}
-            pointerEvents="none"
-          />
-        ) : (
-          <circle r="0.99" className="fill-none stroke-foreground/40" strokeWidth={0.006} pointerEvents="none" />
-        )}
+        {/* The pane's field, as large as the disc holds it. */}
+        <rect
+          x={-field[0]}
+          y={-field[1]}
+          width={field[0] * 2}
+          height={field[1] * 2}
+          className="fill-foreground/5 stroke-foreground/40"
+          strokeWidth={0.006}
+          pointerEvents="none"
+        />
 
         {marks.map((mark) => {
-          const [px, py, depth] = project(mark.at, MINI, MINI, { yaw, pitch, fov: MINI_SPAN });
+          const [px, py, depth] = project(mark.at, MINI, MINI, { yaw, pitch, fov: span });
           if (depth <= 0) return null;
           const [x, y] = [px - MINI / 2, py - MINI / 2];
           const here = mark.id === current;
