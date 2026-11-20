@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Sun } from 'lucide-react';
 import sky from '../assets/sky.jpg?url';
 import {
+  GRATICULE,
   LEVEL,
   bearingOf,
   dragTurn,
@@ -255,23 +256,31 @@ function Mark({ system, picked, onPick }: { system: Marked; picked: boolean; onP
 /** The disc's own side, in the units its marks are placed in: the pane's picture, drawn small. */
 const MINI = 2.02;
 
+/** How many steps a cage line is drawn with: enough that a curve on this disc reads as one. */
+const MINI_STEPS = 32;
+
+/** A direction on the sphere the pane stands in, as a point on the unit sphere. */
+function onSphere(azimuth: number, elevation: number): [number, number, number] {
+  const flat = Math.cos(elevation);
+  return [flat * Math.sin(azimuth), Math.sin(elevation), -flat * Math.cos(azimuth)];
+}
+
 /**
  * How much of the sphere the disc holds, in degrees.
  *
- * Fixed, and narrow enough that the units standing in the space are told apart rather than met. The frame is wider than
- * this at most zooms, so the disc is a window on the space and not a picture of the frame, and the frame is drawn where
- * it falls inside it.
+ * Wide enough that a turn carries the units across the disc rather than out of it: at a narrow window one drag emptied
+ * the map, which is no use on a thing whose whole point is being turned. The frame is drawn where it falls, as a box
+ * while it fits and as the rim when it does not.
  */
-const MINI_SPAN = 36;
+const MINI_SPAN = 140;
 
 /**
  * The space this pane draws, as a disc at the pane's own corner.
  *
- * The frame's minimap answers which project the pilot is in; this one is the pane's own space, drawn in a corner: the
- * units as a field of marks at a window narrow enough to tell them apart, and the pane's field as a box over them. The
- * two are one projection at one scale, so a mark inside the box is a unit in frame and a mark outside it is one a turn
- * would bring in. Where the frame is wider than the window the box reaches past the rim, and the rim says so rather than
- * pretending the frame has shrunk to the disc it no longer fits.
+ * The frame's minimap answers which project the pilot is in; this one is the pane's own space, drawn in a corner, and
+ * two things stand on it through one camera: the sphere's own cage, which is what makes the disc a place being turned
+ * rather than a plan being read, and the units. The pane's field is a box over them while it fits and the rim when it
+ * does not, so a mark inside it is a unit in frame and a mark outside it is one a turn would bring in.
  *
  * A hand that pushes the disc turns the view, because the surface moves under the marker and not the marker under the
  * surface, and a press on a unit turns the pane to face it. Two navigators because they are two questions, and each
@@ -302,6 +311,39 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
   ] as const;
   // A box whose corners are outside the disc is four lines at the rim, which says less than the rim does on its own.
   const boxed = Math.hypot(field[0], field[1]) <= 1;
+
+  // The sphere's own cage, through the disc's camera: what makes the disc a place being turned rather than a plan being
+  // looked at. A line that runs behind the camera is broken there instead of joined across it.
+  const cage = useMemo(() => {
+    const view = { yaw, pitch, fov: MINI_SPAN };
+    const half = MINI / 2;
+    const lines: string[] = [];
+    const trace = (at: (t: number) => [number, number, number]) => {
+      let run: string[] = [];
+      const flush = () => {
+        if (run.length > 1) lines.push(run.join(' '));
+        run = [];
+      };
+      for (let step = 0; step <= MINI_STEPS; step += 1) {
+        const [px, py, depth] = project(at(step / MINI_STEPS), MINI, MINI, view);
+        if (depth <= 0) {
+          flush();
+          continue;
+        }
+        run.push(`${run.length ? 'L' : 'M'}${(px - half).toFixed(3)} ${(py - half).toFixed(3)}`);
+      }
+      flush();
+    };
+    for (let ring = -2; ring <= 2; ring += 1) {
+      const elevation = ring * GRATICULE;
+      trace((t) => onSphere(t * Math.PI * 2, elevation));
+    }
+    for (let index = 0; index < 12; index += 1) {
+      const azimuth = (index / 12) * Math.PI * 2;
+      trace((t) => onSphere(azimuth, (t - 0.5) * Math.PI));
+    }
+    return lines;
+  }, [yaw, pitch]);
 
   const down = (event: ReactPointerEvent<SVGSVGElement>) => {
     // The pane turns the view on its own drag, so a hand that took the disc has taken the map and not the space behind it.
@@ -350,7 +392,16 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
         onPointerCancel={up}
       >
         <circle r="1" className="fill-background/40" />
-        <path d="M-1 0H1M0 -1V1" className="stroke-border/60" strokeWidth="0.004" />
+        {cage.map((line, index) => (
+          <path
+            key={index}
+            d={line}
+            className="fill-none stroke-foreground/15"
+            strokeWidth={0.004}
+            pointerEvents="none"
+          />
+        ))}
+        <path d="M-1 0H1M0 -1V1" className="stroke-border/60" strokeWidth={0.004} />
 
         {/* The frame's own field, when it fits on the disc. When it does not, everything here is in frame and the rim says
             so, which is the same fact the box would carry with its corners off the edge. */}
