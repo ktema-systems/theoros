@@ -256,12 +256,21 @@ function Mark({ system, picked, onPick }: { system: Marked; picked: boolean; onP
 const MINI = 2.02;
 
 /**
+ * How much of the sphere the disc holds, in degrees.
+ *
+ * Fixed rather than tied to the pane's own field: the box drawn inside the disc is the pane's field, so a disc that
+ * widened with the pane would keep the box the same size and say nothing about how much of the sphere was in frame.
+ */
+const MINI_SPAN = 120;
+
+/**
  * The space this pane draws, as a disc at the pane's own corner.
  *
- * The frame's minimap answers which project the pilot is in; this one is the pane's own picture at a smaller size. The
- * marks are the units this pane draws, put through the pane's own camera rather than fitted to the disc, so a zoom
- * spreads them and a turn moves them exactly as it moves the bodies beside them. A disc that fitted them would answer
- * where they are and never how much of the pane they take.
+ * The frame's minimap answers which project the pilot is in; this one is the pane's own view of the sphere, drawn in a
+ * corner at a fixed width. The marks are the units this pane draws, taken through the same projection the pane looks
+ * through, so a turn carries them across the disc as it carries the bodies across the pane. What the pane's own field
+ * holds is the box drawn inside the disc, so a zoom narrows the box instead of redrawing the sphere: the disc answers
+ * how much of the sphere stands around the frame, and the box answers which part of it is in frame.
  *
  * A hand that pushes the disc turns the view, because the surface moves under the marker and not the marker under the
  * surface, and a press on a unit turns the pane to face it. Two navigators because they are two questions, and each
@@ -278,11 +287,18 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
   const yaw = useView((state) => state.yaw);
   const pitch = useView((state) => state.pitch);
   const fov = useView((state) => state.fov);
+  const frame = useView((state) => state.frame);
   const turn = useView((state) => state.turn);
   const face = useView((state) => state.face);
   const disc = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: number; at: [number, number] } | null>(null);
   const turned = useRef(false);
+  // The pane's own field as a box inside the disc. Both are in degrees, which is what `project` and the view store use.
+  const half = Math.min(1, Math.tan((fov * Math.PI) / 360) / Math.tan((MINI_SPAN * Math.PI) / 360));
+  const field = [
+    Math.min(1, half * (frame[0] / Math.max(frame[1], 1))),
+    half,
+  ] as const;
 
   const down = (event: ReactPointerEvent<SVGSVGElement>) => {
     // The pane turns the view on its own drag, so a hand that took the disc has taken the map and not the space behind it.
@@ -321,6 +337,7 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
     >
       <svg
         ref={disc}
+        data-region="region-map"
         viewBox="-1.01 -1.01 2.02 2.02"
         preserveAspectRatio="xMidYMid meet"
         className="size-full cursor-move touch-none"
@@ -332,8 +349,18 @@ function RegionMap({ marks, current }: { marks: RegionMark[]; current: string | 
         <circle r="1" className="fill-background/40" />
         <path d="M-1 0H1M0 -1V1" className="stroke-border/60" strokeWidth="0.004" />
 
+        <rect
+          x={-field[0]}
+          y={-field[1]}
+          width={field[0] * 2}
+          height={field[1] * 2}
+          className="fill-foreground/5 stroke-foreground/40"
+          strokeWidth={0.006}
+          pointerEvents="none"
+        />
+
         {marks.map((mark) => {
-          const [px, py, depth] = project(mark.at, MINI, MINI, { yaw, pitch, fov });
+          const [px, py, depth] = project(mark.at, MINI, MINI, { yaw, pitch, fov: MINI_SPAN });
           if (depth <= 0) return null;
           const [x, y] = [px - MINI / 2, py - MINI / 2];
           const here = mark.id === current;
