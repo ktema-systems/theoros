@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Publishing on demand, so a site that drifted from main is republished without a commit made to carry it.
+  workflow_dispatch:
+
+# One upload at a time: a second run waits for the first rather than interleaving its files with it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   check:
@@ -20,3 +27,31 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # What is published is what was checked, so the build is handed over rather than made a second time.
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
+
+  deploy:
+    needs: check
+    # A run on main publishes. A pull request is a tree somebody is proposing, so it is checked and no more.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      # The checkout is here for the commit wrangler records beside the deployment. --branch names Production, because a
+      # direct upload that omits it lands as a preview nobody visits.
+      - run: npx --yes wrangler@4 pages deploy dist --project-name theoros --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
