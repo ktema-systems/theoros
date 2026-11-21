@@ -10,3 +10,4 @@ skene/
 # Generated from capture/ by `npm run generate`; the dev, build and test scripts run it first.
 projects/
 projects.json
+.demo/
